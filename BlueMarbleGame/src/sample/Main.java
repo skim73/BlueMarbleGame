@@ -7,6 +7,7 @@ import javafx.scene.*;
 import javafx.scene.control.*;
 import javafx.scene.image.*;
 import javafx.scene.layout.*;
+import javafx.scene.paint.Color;
 import javafx.stage.Stage;
 
 import java.io.FileInputStream;
@@ -46,16 +47,15 @@ public class Main extends Application {
             (Row 0 and Column 0 represent the white frame around the board)
             GO SPACE at Column 11, Row 11, CAIRO at Column 3, Row 11, etc.
          */
-        playerGridPane.setGridLinesVisible(true);
         playerGridPane.setHgap(1);
         playerGridPane.setVgap(1);
 
         /*  These are the pixel lengths of the frame, corners, and spaces of the board expressed as fractions of
             the entire board.
          */
-        final double FRAME_RATIO = 40/1654.0;
-        final double CORNER_RATIO = 222/1654.0;
-        final double SPACE_RATIO = 122/1654.0;
+        final double FRAME_RATIO = 40 / 1654.0;
+        final double CORNER_RATIO = 222 / 1654.0;
+        final double SPACE_RATIO = 120 / 1654.0;
         // Row 0 & Column 0 represent the white frame around the board
         playerGridPane.getColumnConstraints().add(new ColumnConstraints(FRAME_RATIO * boardIV.getFitWidth()));
         playerGridPane.getRowConstraints().add(new RowConstraints(FRAME_RATIO * boardIV.getFitHeight()));
@@ -96,98 +96,82 @@ public class Main extends Application {
 
         // When PLAY button is clicked: load Player setup UI
         playButton.setOnAction(actionEvent -> {
-                int numPlayers = 0;
-                switch (numPlayersComboBox.getValue()) {
-                    case "2 PLAYERS":
-                        gameManager.players = new ArrayList<>(2);
-                        numPlayers = 2;
-                        gameBox.getChildren().clear();
-                        break;
-                    case "3 PLAYERS":
-                        gameManager.players = new ArrayList<>(3);
-                        numPlayers = 3;
-                        gameBox.getChildren().clear();
-                        break;
-                    case "4 PLAYERS":
-                        gameManager.players = new ArrayList<>(4);
-                        numPlayers = 4;
-                        gameBox.getChildren().clear();
-                        break;
-                }
+            int numPlayers = Integer.parseInt(numPlayersComboBox.getValue().substring(0, 1));
+            gameManager.players = new ArrayList<>(numPlayers);
+            gameBox.getChildren().clear();
 
-                VBox[] playerSetup = new VBox[numPlayers];
-                for (int i = 0; i < numPlayers; i++) {
-                    gameManager.players.add(new Player(i + 1));
-                    Label nameLabel = new Label("Player " + (i + 1) + " Name: ");
-                    TextField input = new TextField("Player " + (i + 1));
-                    HBox nameInput = new HBox(nameLabel, input);
+            VBox[] playerSetup = new VBox[numPlayers];
+            for (int i = 0; i < numPlayers; i++) {
+                gameManager.players.add(new Player(i + 1));
+                Label nameLabel = new Label("Player " + (i + 1) + " Name: ");
+                TextField input = new TextField("Player " + (i + 1));
+                HBox nameInput = new HBox(nameLabel, input);
+                final ComboBox<String> planeColorChoices = new ComboBox<>();
+                planeColorChoices.getItems().addAll("RED", "BLUE", "YELLOW", "WHITE");
 
-                    Label chooseLabel = new Label("Choose plane color (Click to change): ");
-                    HBox planeColor = new HBox();
-                    try {
-                        PlaneColorChoices planeColorChoices = new PlaneColorChoices();
-                        ImageView planeImageView = new ImageView(planeColorChoices.getIcon());
-                        planeImageView.setFitWidth(64);
-                        planeImageView.setFitHeight(64);
 
-                        planeImageView.setOnMouseClicked(mouseEvent -> {
-                                planeImageView.setImage(planeColorChoices.next());
-                        });
+                Label chooseLabel = new Label("Choose plane color:  ");
+                HBox planeColor = new HBox();
 
-                        planeColor.getChildren().addAll(chooseLabel, planeImageView);
+                planeColor.getChildren().addAll(chooseLabel, planeColorChoices);
 
-                    } catch (FileNotFoundException e) {
-                        System.out.println("IMAGE NOT FOUND");
+
+                playerSetup[i] = new VBox(nameInput, planeColor);
+                playerSetup[i].setSpacing(15);
+                gameBox.getChildren().add(playerSetup[i]);
+            }
+            gameBox.setSpacing(30);
+
+            Button LetsPlayButton = new Button("LET'S PLAY!");
+            HashSet<String> colors = new HashSet<>();
+            LetsPlayButton.setOnAction(actionEvent1 -> {
+                colors.clear();
+                for (int i = 0; i < gameManager.players.size(); i++) {
+                    Player player = gameManager.players.get(i);
+                    player.setName(
+                        ((TextField) (((HBox) playerSetup[i].getChildren().get(0)).getChildren().get(1)))
+                            .getText());
+                    String colorChoice = ((ComboBox<String>)
+                        ((HBox) playerSetup[i].getChildren().get(1)).getChildren().get(1)).getValue();
+                    if (!colors.add(colorChoice)) {
+                            Label repeatedColorLabel = new Label("A plane color cannot be repeated. " +
+                                "Please select again.");
+                            repeatedColorLabel.setTextFill(Color.RED);
+                            gameBox.getChildren().add(repeatedColorLabel);
+                        return;
                     }
-
-                    playerSetup[i] = new VBox(nameInput, planeColor);
-                    playerSetup[i].setSpacing(15);
-                    gameBox.getChildren().add(playerSetup[i]);
-                }
-                gameBox.setSpacing(30);
-
-                Button LetsPlayButton = new Button("LET'S PLAY!");
-                LetsPlayButton.setOnAction(actionEvent1 -> {
-                        for (int i = 0; i < gameManager.players.size(); i++) {
-                            Player player = gameManager.players.get(i);
-                            ImageView playerPlane =
-                                ((ImageView) ((HBox) playerSetup[i].getChildren().get(1)).getChildren().get(1));
-                            player.setPlane(playerPlane);
+                    try {
+                        switch (colorChoice) {
+                            case "RED":
+                                player.setPlane(new ImageView(new Image(
+                                    new FileInputStream("img_planes/red.png"))));
+                                player.setPlayerColor(Color.RED);
+                                break;
+                            case "BLUE":
+                                player.setPlane(new ImageView(new Image(
+                                    new FileInputStream("img_planes/blue.png"))));
+                                player.setPlayerColor(Color.DODGERBLUE);
+                                break;
+                            case "YELLOW":
+                                player.setPlane(new ImageView(new Image(
+                                    new FileInputStream("img_planes/yellow.png"))));
+                                player.setPlayerColor(Color.GOLD);
+                                break;
+                            case "WHITE":
+                                player.setPlane(new ImageView(new Image(
+                                    new FileInputStream("img_planes/white.png"))));
+                                player.setPlayerColor(Color.WHITE);
+                                break;
                         }
-                        gameBox.getChildren().clear();
-                        gameManager.beginGame();
-                });
-                gameBox.getChildren().add(LetsPlayButton);
+                    } catch (FileNotFoundException e) {
+                        e.printStackTrace();
+                    }
+                }
+                gameBox.getChildren().clear();
+                gameManager.beginGame();
+            });
+            gameBox.getChildren().add(LetsPlayButton);
         });
-    }
-
-
-
-    /**
-     * Private inner class for letting Players selecting their plane icon colors.
-     */
-    private static class PlaneColorChoices {
-        final Image[] planes = {
-            new Image(new FileInputStream("img_planes/red.png")),
-            new Image(new FileInputStream("img_planes/blue.png")),
-            new Image(new FileInputStream("img_planes/yellow.png")),
-            new Image(new FileInputStream("img_planes/white.png"))
-        };
-
-        private int index = 0;
-
-        private PlaneColorChoices() throws FileNotFoundException {
-        }
-
-        Image next() {
-            if (++index == 4)
-                index = 0;
-            return planes[index];
-        }
-
-        Image getIcon() {
-            return planes[index];
-        }
     }
 
     /**
@@ -201,8 +185,13 @@ public class Main extends Application {
 
 }
 
+/**
+ * Just a utility class containing a method that formats a Player's money amount into "$#.##M"
+ */
 class MoneyFormat {
     public static String format(double amount) {
+        if (amount < 1.00)
+            return String.format("$%.0fK", amount * 1000);
         return String.format("$%.2fM", amount);
     }
 }
