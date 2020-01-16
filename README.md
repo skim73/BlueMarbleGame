@@ -1,7 +1,6 @@
 # BlueMarbleGame
 JavaFX (13.0.1) application of a Korean spin-off of Monopoly board game
 
-# HOW TO RUN
 For now, this is only runnable via a professional Java IDE (I recommend IntelliJ since it's the IDE I used). Please run this on
 JDK 11+ & JavaFX SDK 11+.
 
