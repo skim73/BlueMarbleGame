@@ -44,4 +44,4 @@ There are some rules and features that make Blue Marble and Monopoly distinct.
 (5) SEOUL OLYMPICS (39th space)
     - The 1988 Summer Olympics at Seoul still serves to be a huge source of nationalism. Blue Marble wanted to make this international
     event stand out by making it the most expensive property (by base price) in the game with the base price of $10.00M and a whopping
-    rent of $20.00M. Imagine buying Boardwalk and building a hotel there instantly!
+    rent of $20.00M. Imagine buying Boardwalk(US)/Mayfair(UK) and building a hotel there instantly!
