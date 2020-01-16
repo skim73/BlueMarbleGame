@@ -45,29 +45,34 @@ public class Main extends Application {
 
         /*  Sets up playerGridPane to have a row and column for every space.
             (Row 0 and Column 0 represent the white frame around the board)
-            GO SPACE at Column 11, Row 11, CAIRO at Column 3, Row 11, etc.
-         */
-        playerGridPane.setHgap(1);
-        playerGridPane.setVgap(1);
+            GO SPACE at Column 13, Row 13, CAIRO at Column 3, Row 13, etc.
 
-        /*  These are the pixel lengths of the frame, corners, and spaces of the board expressed as fractions of
-            the entire board.
+            The four final values below are the pixel lengths of the frame, corners, and spaces of the board
+            expressed as fractions of the entire board.
          */
+
         final double FRAME_RATIO = 40 / 1654.0;
-        final double CORNER_RATIO = 222 / 1654.0;
-        final double SPACE_RATIO = 120 / 1654.0;
+        final double CORNER_RATIO = 178 / 1654.0;
+        final double SPACE_RATIO = 124.01 / 1654.0;
+        final double BUILDING_AREA_RATIO = 44 / 1654.0;
         // Row 0 & Column 0 represent the white frame around the board
         playerGridPane.getColumnConstraints().add(new ColumnConstraints(FRAME_RATIO * boardIV.getFitWidth()));
         playerGridPane.getRowConstraints().add(new RowConstraints(FRAME_RATIO * boardIV.getFitHeight()));
         // Row 1 & Column 1 are wider, as seen in the board
         playerGridPane.getColumnConstraints().add(new ColumnConstraints(CORNER_RATIO * boardIV.getFitWidth()));
         playerGridPane.getRowConstraints().add(new RowConstraints(CORNER_RATIO * boardIV.getFitHeight()));
-        // Rows & Columns 2 - 10
-        for (int i = 2; i <= 10; i++) {
+        // Row 2 & Column 2 represent the little rectangles on top of Property spaces for buildings
+        playerGridPane.getColumnConstraints().add(new ColumnConstraints(BUILDING_AREA_RATIO * boardIV.getFitWidth()));
+        playerGridPane.getRowConstraints().add(new RowConstraints(BUILDING_AREA_RATIO * boardIV.getFitHeight()));
+        // Rows & Columns 3 - 11
+        for (int i = 3; i <= 11; i++) {
             playerGridPane.getColumnConstraints().add(new ColumnConstraints(SPACE_RATIO * boardIV.getFitWidth()));
             playerGridPane.getRowConstraints().add(new RowConstraints(SPACE_RATIO * boardIV.getFitHeight()));
         }
-        // Row 11 & Column 11 are just as wide as Row 1 & Column 1
+        // Row 12 & Column 12 same as Row 2 & Column 2
+        playerGridPane.getColumnConstraints().add(new ColumnConstraints(BUILDING_AREA_RATIO * boardIV.getFitWidth()));
+        playerGridPane.getRowConstraints().add(new RowConstraints(BUILDING_AREA_RATIO * boardIV.getFitHeight()));
+        // Row 13 & Column 13 same as Row 1 & Column 1
         playerGridPane.getColumnConstraints().add(new ColumnConstraints(CORNER_RATIO * boardIV.getFitWidth()));
         playerGridPane.getRowConstraints().add(new RowConstraints(CORNER_RATIO * boardIV.getFitHeight()));
 
@@ -155,12 +160,12 @@ public class Main extends Application {
                             case "YELLOW":
                                 player.setPlane(new ImageView(new Image(
                                     new FileInputStream("img_planes/yellow.png"))));
-                                player.setPlayerColor(Color.GOLD);
+                                player.setPlayerColor(Color.GOLDENROD);
                                 break;
                             case "WHITE":
                                 player.setPlane(new ImageView(new Image(
                                     new FileInputStream("img_planes/white.png"))));
-                                player.setPlayerColor(Color.WHITE);
+                                player.setPlayerColor(Color.BLACK);
                                 break;
                         }
                     } catch (FileNotFoundException e) {
@@ -168,7 +173,11 @@ public class Main extends Application {
                     }
                 }
                 gameBox.getChildren().clear();
-                gameManager.beginGame();
+                try {
+                    gameManager.beginGame();
+                } catch (FileNotFoundException e) {
+                    e.printStackTrace();
+                }
             });
             gameBox.getChildren().add(LetsPlayButton);
         });
@@ -190,8 +199,8 @@ public class Main extends Application {
  */
 class MoneyFormat {
     public static String format(double amount) {
-        if (amount < 1.00)
+        if (amount <= .999)
             return String.format("$%.0fK", amount * 1000);
-        return String.format("$%.2fM", amount);
+        return String.format("$%.3fM", amount);
     }
 }

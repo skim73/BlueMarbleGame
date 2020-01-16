@@ -2,6 +2,7 @@ package sample;
 
 import javafx.animation.KeyFrame;
 import javafx.animation.Timeline;
+import javafx.application.Application;
 import javafx.collections.ObservableList;
 import javafx.geometry.HPos;
 import javafx.geometry.Pos;
@@ -25,8 +26,7 @@ import java.util.*;
 import static sample.FillSpaceToPropertyMap.fill;
 
 /**
- * GameManager class managing number of players, turns, and the display on the right of the
- * game board
+ * GameManager class controlling the main game play
  */
 class GameManager {
     ArrayList<Player> players;
@@ -53,7 +53,7 @@ class GameManager {
     boolean worldTour;
 
     static Stage popup;
-    final HashMap<Integer, Property> spaceToProperty;
+    final HashMap<Integer, Property> spaceToProperty = new HashMap<>();
     final LinkedList<GoldenKey> goldenKeys;
 
     public GameManager(VBox vBox, GridPane playerGridPane) throws FileNotFoundException {
@@ -73,7 +73,7 @@ class GameManager {
         die1.setFitHeight(64);
         GridPane.setHalignment(die1, HPos.CENTER);
         GridPane.setValignment(die1, VPos.CENTER);
-        GridPane.setConstraints(die1, 5, 5);
+        GridPane.setConstraints(die1, 6, 6);
         die1.setFitWidth(playerGridPane.getColumnConstraints().get(5).getPrefWidth());
         die1.setFitHeight(playerGridPane.getRowConstraints().get(5).getPrefHeight());
 
@@ -82,7 +82,7 @@ class GameManager {
         die2.setFitHeight(64);
         GridPane.setHalignment(die2, HPos.CENTER);
         GridPane.setValignment(die2, VPos.CENTER);
-        GridPane.setConstraints(die2, 7, 5);
+        GridPane.setConstraints(die2, 8, 6);
         die2.setFitWidth(playerGridPane.getColumnConstraints().get(7).getPrefWidth());
         die2.setFitHeight(playerGridPane.getRowConstraints().get(5).getPrefHeight());
 
@@ -126,25 +126,23 @@ class GameManager {
         Collections.shuffle(goldenKeys);
 
         popup = new Stage();
-
-        spaceToProperty = new HashMap<>();
-        fill(spaceToProperty);
     }
 
     /**
      * Places Players' planes on board, sets up dice, and begins the game.
      * The first Player to go is chosen randomly.
      */
-    public void beginGame() {
+    public void beginGame() throws FileNotFoundException {
         turn = random.nextInt(players.size());
         for (int i = turn + players.size() - 1; i >= turn; i--) {
             ImageView plane = players.get(i % players.size()).getPlane();
             plane.setFitHeight(32);
             plane.setFitWidth(32);
-            GridPane.setConstraints(plane, 11, 11);
+            GridPane.setConstraints(plane, 13, 13);
 
-            playerGridPane.getChildren().add(plane);
             GridPane.setHalignment(plane, HPos.CENTER);
+            GridPane.setValignment(plane, VPos.CENTER);
+            playerGridPane.getChildren().add(plane);
         }
 
         rollingPhase = true;
@@ -178,12 +176,13 @@ class GameManager {
         }
 
         popup.setOnHidden(windowEvent -> {
-            playerTurnLabel.setText(nextTurn().getName() + "'s turn.");
+            if (!worldTour)
+                playerTurnLabel.setText(nextTurn().getName() + "'s turn.");
         });
 
         GridPane.setHalignment(rollButton, HPos.CENTER);
         GridPane.setValignment(rollButton, VPos.CENTER);
-        GridPane.setConstraints(rollButton, 6, 6);
+        GridPane.setConstraints(rollButton, 7, 7);
 
         playerGridPane.getChildren().addAll(die1, die2, rollButton);
         playerTurnLabel.setText(nextTurn().getName() + "'s turn.");
@@ -194,16 +193,14 @@ class GameManager {
             Label name = new Label(String.format("%-24s", player.getName()));
             HBox hBox = new HBox(name, player.getMoneyText(), player.getPropertiesComboBox());
             hBox.setSpacing(64);
-            hBox.setBorder(new Border(new BorderStroke(
-                player.getPlayerColor().equals(Color.WHITE) ? Color.BLACK : player.getPlayerColor(),
+            hBox.setBorder(new Border(new BorderStroke(player.getPlayerColor(),
                 BorderStrokeStyle.SOLID, CornerRadii.EMPTY, BorderWidths.DEFAULT)));
             gameBox.getChildren().add(hBox);
         }
 
+        fill(spaceToProperty);
         for (Property property : spaceToProperty.values()) {
             if (property instanceof RegularProperty) {
-                GridPane.setConstraints(((RegularProperty) property).buildingPics,
-                    Player.spaceToGrid[property.space][0], Player.spaceToGrid[property.space][1]);
                 playerGridPane.getChildren().add(((RegularProperty) property).buildingPics);
             }
         }
@@ -256,12 +253,12 @@ class GameManager {
     public Player nextTurn() {
         if (gotDouble) {
             gotDouble = false;
-        } else if (++turn == players.size()) {
+        } else if (++turn >= players.size()) {
             turn = 0;
         }
         rollingPhase = true;
         players.get(turn).getPlane().toFront();
-
+        playerTurnLabel.setTextFill(players.get(turn).getPlayerColor());
 
         return players.get(turn);
     }
@@ -280,6 +277,12 @@ class GameManager {
         return die1Value + die2Value;
     }
 
+    /**
+     * Long ass method for determining which interactive window to show to the Player after landing at
+     * the specified space.
+     *
+     * @param space space index of where the Player landed
+     */
     public void showPopup(int space) {
         if (worldTour) {
             worldTour = false;
@@ -288,8 +291,8 @@ class GameManager {
         }
         BorderPane popupBorderPane = new BorderPane();
         ImageView imageView = new ImageView();
-        imageView.setFitWidth(500);
-        imageView.setFitHeight(375);
+        imageView.setFitWidth(400);
+        imageView.setFitHeight(300);
         Button b0 = new Button("OK");
         b0.setOnAction(actionEvent -> popup.close());
         Label topLabel = new Label();
@@ -300,13 +303,26 @@ class GameManager {
         rightVBox.setAlignment(Pos.CENTER);
         HBox rightHBox = new HBox(rightVBox);
         rightHBox.setSpacing(16);
-        rightHBox.getChildren().add(0, new Rectangle(32, 32));
-        rightHBox.getChildren().add(new Rectangle(32, 32));
-        ((Rectangle)rightHBox.getChildren().get(0)).setFill(Color.GHOSTWHITE);
-        ((Rectangle)rightHBox.getChildren().get(2)).setFill(Color.GHOSTWHITE);
+        rightHBox.getChildren().add(0, new Rectangle(12, 12));
+        rightHBox.getChildren().add(new Rectangle(12, 12));
+        ((Rectangle) rightHBox.getChildren().get(0)).setFill(Color.GHOSTWHITE);
+        ((Rectangle) rightHBox.getChildren().get(2)).setFill(Color.GHOSTWHITE);
+
+        Label money = new Label("You have: " + MoneyFormat.format(players.get(turn).getMoney()));
+        money.setTextFill(players.get(turn).getMoney() >= 6.00 ? Color.FORESTGREEN : Color.CRIMSON);
+        money.setFont(new Font("Arial Black", 20));
+        rightVBox.getChildren().add(0, money);
 
         popup.setOnHidden(windowEvent -> {
-            playerTurnLabel.setText(nextTurn().getName() + "'s turn.");
+            if (players.size() == 1) {
+                try {
+                    gameOver();
+                } catch (FileNotFoundException e) {
+                    e.printStackTrace();
+                }
+            }
+            else
+                playerTurnLabel.setText(nextTurn().getName() + "'s turn.");
         });
 
 
@@ -338,27 +354,40 @@ class GameManager {
                     b0.setText("Thank you, welfare!");
                     b0.setOnAction(actionEvent -> {
                         players.get(turn).changeMoney(welfare);
+                        welfare = 0;
+                        welfareText.setText(MoneyFormat.format(welfare));
                         popup.close();
                     });
-                    welfare = 0;
-                    welfareText.setText(MoneyFormat.format(welfare));
                     break;
                 case 30:
                     if (freeSpaceStation) {
                         players.get(turn).enterSpaceStation();
-                        GridPane.setConstraints(players.get(turn).getPlane(), 9, 3);
+                        GridPane.setConstraints(players.get(turn).getPlane(), 10, 4);
                         freeSpaceStation = false;
                         playerTurnLabel.setText(nextTurn().getName() + "'s turn.");
                         return;
                     }
                     imageView.setImage(new Image(new FileInputStream("img_properties/30.png")));
                     topLabel.setText("Would you like to enter Space Station?");
-                    b0.setText("YES (Pay $2.00M to " + (spaceToProperty.get(32).owner == null ?
+                    if (players.get(turn) == spaceToProperty.get(32).owner)
+                        b0.setText("YES");
+                    else
+                        b0.setText("YES (Pay $2.00M to " + (spaceToProperty.get(32).owner == null ?
                         "BANKER" : spaceToProperty.get(32).owner.getName()) + ")");
                     b0.setOnAction(actionEvent -> {
-                        players.get(turn).payOther(spaceToProperty.get(32).owner, ColumbiaSpaceShuttle.ENTRY_FEE);
-                        players.get(turn).enterSpaceStation();
-                        GridPane.setConstraints(players.get(turn).getPlane(), 9, 3);
+                        try {
+                            players.get(turn).changeMoney(-ColumbiaSpaceShuttle.ENTRY_FEE);
+                            if (spaceToProperty.get(32).owner != null)
+                                spaceToProperty.get(32).owner.changeMoney(ColumbiaSpaceShuttle.ENTRY_FEE);
+                            players.get(turn).enterSpaceStation();
+                            GridPane.setConstraints(players.get(turn).getPlane(), 10, 4);
+                        } catch (NotEnoughMoneyException e) {
+                            Alert alert = new Alert(Alert.AlertType.ERROR);
+                            alert.setTitle("You don't have enough money!");
+                            alert.setHeaderText("You can't afford a ticket to Space Station.");
+                            alert.setContentText("Try again when you do have enough money.");
+                            alert.showAndWait();
+                        }
                         popup.close();
                     });
                     Button b1 = new Button("No Thanks.");
@@ -367,14 +396,18 @@ class GameManager {
                     break;
                 case 38:
                     imageView.setImage(new Image(new FileInputStream("img_properties/38.png")));
-                    topLabel.setText("Please donate $1.50M to Welfare Zone. Thank you for\n" +
-                        "your contributions!");
+                    topLabel.setText("Please donate $1.50M to Welfare Zone. \nThank you for your contributions!");
                     b0.setText("Donate $1.50M");
                     b0.setOnAction(actionEvent -> {
-                        players.get(turn).payOther(null, 1.50);
-                        welfare += 1.50;
-                        welfareText.setText(MoneyFormat.format(welfare));
-                        popup.close();
+                        try {
+                            players.get(turn).payOther(null, 1.50);
+                        } catch (BankruptcyException e) {
+                            eliminate(players.get(turn), e.shark);
+                        } finally {
+                            welfare += 1.50;
+                            welfareText.setText(MoneyFormat.format(welfare));
+                            popup.close();
+                        }
                     });
                     break;
                 case 2:
@@ -386,13 +419,30 @@ class GameManager {
                     GoldenKey goldenKey = drawGoldenKeyCard();
                     imageView.setImage(goldenKey.card);
                     topLabel.setText("GOLDEN KEY CARD");
+                    Property mostExpensive = null;
+                    if (goldenKey.id == 22 || goldenKey.id == 23) {
+                        if (players.get(turn).getProperties().size() > 0) {
+                            mostExpensive = players.get(turn).getProperties().get(0);
+                            for (int i = 1; i < players.get(turn).getProperties().size(); i++) {
+                                if (mostExpensive.price < players.get(turn).getProperties().get(i).price)
+                                    mostExpensive = players.get(turn).getProperties().get(i);
+                            }
+                        }
+                        rightVBox.getChildren().add(0, new Label("Your most expensive property: \n" +
+                            (mostExpensive != null ? mostExpensive.toString() : "NULL") + "\n"));
+                    }
+                    Property finalMostExpensive = mostExpensive;
                     b0.setOnAction(actionEvent -> {
                         switch (goldenKey.id) {
                             case 0:
                                 for (Player opponent : players) {
                                     if (opponent == players.get(turn))
                                         continue;
-                                    opponent.payOther(players.get(turn), .05);
+                                    try {
+                                        opponent.payOther(players.get(turn), .05);
+                                    } catch (BankruptcyException e) {
+                                        eliminate(opponent, e.shark);
+                                    }
                                 }
                                 break;
                             case 1:
@@ -423,11 +473,13 @@ class GameManager {
                                 break;
                             case 11:
                                 players.get(turn).move(-2, false);
-                                GameManager.popup.setOnHidden(windowEvent -> {});
+                                GameManager.popup.setOnHidden(windowEvent -> {
+                                });
                                 break;
                             case 12:
                                 players.get(turn).move(-3, false);
-                                GameManager.popup.setOnHidden(windowEvent -> {});
+                                GameManager.popup.setOnHidden(windowEvent -> {
+                                });
                                 break;
                             case 13:
                                 players.get(turn).directlyMove(0, false);
@@ -437,8 +489,13 @@ class GameManager {
                                 players.get(turn).receiveComplimentaryTicket();
                                 break;
                             case 16:
-                                if (spaceToProperty.get(15).owner != null)
-                                    players.get(turn).payOther(spaceToProperty.get(15).owner, 3.00);
+                                if (spaceToProperty.get(15).owner != null) {
+                                    try {
+                                        players.get(turn).payOther(spaceToProperty.get(15).owner, 3.00);
+                                    } catch (BankruptcyException e) {
+                                        eliminate(players.get(turn), e.shark);
+                                    }
+                                }
                                 players.get(turn).directlyMove(1, false);
                                 break;
                             case 17:
@@ -446,11 +503,14 @@ class GameManager {
                                 for (Property property : players.get(turn).getProperties()) {
                                     if (property instanceof RegularProperty) {
                                         total += .10 * ((RegularProperty) property).getBuildings()[0] +
-                                                 .30 * ((RegularProperty) property).getBuildings()[1] +
-                                                 .50 * ((RegularProperty) property).getBuildings()[2];
+                                            .30 * ((RegularProperty) property).getBuildings()[1] +
+                                            .50 * ((RegularProperty) property).getBuildings()[2];
                                     }
                                 }
                                 players.get(turn).changeMoney(-total);
+                                break;
+                            case 18:
+                                players.get(turn).changeMoney(1.00);
                                 break;
                             case 19:
                                 worldTour = true;
@@ -458,7 +518,8 @@ class GameManager {
                                 players.get(turn).move(40, false);
                                 players.get(turn).changeMoney(welfare);
                                 welfare = 0;
-                                return;
+                                welfareText.setText(MoneyFormat.format(0));
+                                break;
                             case 20:
                                 double total1 = 0;
                                 for (Property property : players.get(turn).getProperties()) {
@@ -475,14 +536,10 @@ class GameManager {
                                 break;
                             case 22:
                             case 23:
-                                if (players.get(turn).getProperties().isEmpty())
+                                if (finalMostExpensive == null)
                                     break;
-                                Property mostExpensive = players.get(turn).getProperties().get(0);
-                                for (int i = 1; i < players.get(turn).getProperties().size(); i++) {
-                                    if (mostExpensive.price < players.get(turn).getProperties().get(i).price)
-                                        mostExpensive = players.get(turn).getProperties().get(i);
-                                }
-                                players.get(turn).sell(mostExpensive);
+                                players.get(turn).changeMoney(finalMostExpensive.price / 2);
+                                players.get(turn).sell(finalMostExpensive, null);
                                 break;
                             case 24:
                                 players.get(turn).directlyMove(39, false);
@@ -508,20 +565,25 @@ class GameManager {
                                 freeSpaceStation = true;
                                 players.get(turn).directlyMove(30, false);
                                 players.get(turn).enterSpaceStation();
-                                GridPane.setConstraints(players.get(turn).getPlane(), 9, 3);
+                                GridPane.setConstraints(players.get(turn).getPlane(), 10, 4);
                                 break;
                         }
                         popup.close();
+
                     });
+                    popup.setOnCloseRequest(windowEvent -> b0.getOnAction());
                     break;
                 default:
                     Property property = spaceToProperty.get(space);
                     imageView.setImage(property.propertyCard);
                     topLabel.setText((property.owner == null) ? "UNOWNED PROPERTY" :
                         "OWNED BY: " + property.owner.getName());
+                    topLabel.setTextFill((property.owner == null ?
+                        Color.DARKTURQUOISE : property.owner.getPlayerColor()));
 
                     Label message = new Label();
                     rightVBox.getChildren().add(0, message);
+
                     if (property.owner == null) {
                         message.setText("Would you like to purchase this property?");
                         b0.setText("YES (for " + MoneyFormat.format(property.price) + ")");
@@ -536,9 +598,16 @@ class GameManager {
                         message.setText("You owe rent to " + property.owner.getName() + "!");
                         b0.setText("Pay rent (" + MoneyFormat.format(property.rent) + ")");
                         b0.setOnAction(actionEvent -> {
-                            players.get(turn).payOther(property.owner, property.rent);
+                            b0.setOnAction(actionEvent1 -> {});
+                            try {
+                                players.get(turn).payOther(property.owner, property.rent);
+                            } catch (BankruptcyException e) {
+                                eliminate(players.get(turn), e.shark);
+                            }
                             popup.close();
                         });
+                        popup.setOnCloseRequest(windowEvent -> b0.getOnAction());
+
                         if (players.get(turn).getComplimentaryTickets() > 0) {
                             Button b6 = new Button("...or use Complimentary Ticket!");
                             b6.setOnAction(actionEvent -> {
@@ -603,11 +672,17 @@ class GameManager {
                                 queriesLabels[2].setText(queries[2] + "");
                             });
 
+                            Label house = new Label("HOUSES:    ");
+                            house.setTextFill(Color.RED);
+                            Label officeBuilding = new Label("OFFICE\nBUILDINGS:");
+                            officeBuilding.setTextFill(Color.GREEN);
+                            Label hotel = new Label("HOTELS:    ");
+                            hotel.setTextFill(Color.DODGERBLUE);
 
-                            HBox houseQuery = new HBox(minusButtonHouse, queriesLabels[0], plusButtonHouse);
-                            HBox officeBuildingQuery = new HBox(minusButtonOfficeBuilding, queriesLabels[1],
-                                plusButtonOfficeBuilding);
-                            HBox hotelQuery = new HBox(minusButtonHotel, queriesLabels[2], plusButtonHotel);
+                            HBox houseQuery = new HBox(house, minusButtonHouse, queriesLabels[0], plusButtonHouse);
+                            HBox officeBuildingQuery = new HBox(officeBuilding, minusButtonOfficeBuilding,
+                                queriesLabels[1], plusButtonOfficeBuilding);
+                            HBox hotelQuery = new HBox(hotel, minusButtonHotel, queriesLabels[2], plusButtonHotel);
                             houseQuery.setAlignment(Pos.CENTER);
                             houseQuery.setSpacing(20);
                             officeBuildingQuery.setAlignment(Pos.CENTER);
@@ -615,31 +690,31 @@ class GameManager {
                             hotelQuery.setAlignment(Pos.CENTER);
                             hotelQuery.setSpacing(20);
 
-                            b0.setText("Construct/Sell");
+                            b0.setText("Construct/Sell Buildings");
                             b0.setOnAction(actionEvent -> {
-                                players.get(turn).build(property, queries);
-                                popup.close();
+                                if (players.get(turn).build((RegularProperty) property, queries))
+                                    popup.close();
                             });
 
                             if (((RegularProperty) property).getBuildings()[0] == 0)
-                                houseQuery.getChildren().get(0).setVisible(false);
+                                houseQuery.getChildren().get(1).setVisible(false);
                             else if (((RegularProperty) property).getBuildings()[0] == 2)
-                                houseQuery.getChildren().get(2).setVisible(false);
+                                houseQuery.getChildren().get(3).setVisible(false);
 
                             if (((RegularProperty) property).getBuildings()[1] == 0)
-                                officeBuildingQuery.getChildren().get(0).setVisible(false);
+                                officeBuildingQuery.getChildren().get(1).setVisible(false);
                             else if (((RegularProperty) property).getBuildings()[1] == 2)
-                                officeBuildingQuery.getChildren().get(2).setVisible(false);
+                                officeBuildingQuery.getChildren().get(3).setVisible(false);
 
                             if (((RegularProperty) property).getBuildings()[2] == 0)
-                                hotelQuery.getChildren().get(0).setVisible(false);
+                                hotelQuery.getChildren().get(1).setVisible(false);
                             else if (((RegularProperty) property).getBuildings()[2] == 2)
-                                hotelQuery.getChildren().get(2).setVisible(false);
+                                hotelQuery.getChildren().get(3).setVisible(false);
 
                             Button b3 = new Button("No thanks.");
                             b3.setOnAction(actionEvent -> popup.close());
 
-                            rightVBox.getChildren().setAll(message, houseQuery, officeBuildingQuery,
+                            rightVBox.getChildren().setAll(message, money, houseQuery, officeBuildingQuery,
                                 hotelQuery, b0, b3);
 
                         } else {
@@ -689,19 +764,46 @@ class GameManager {
             shark.takeOver(loser, loser.getProperties());
             shark.changeMoney(loser.getMoney());
         }
-        gameBox.getChildren().remove(players.indexOf(loser) + 1);
-        players.remove(loser);
 
-        if (players.size() == 1)
-            gameOver();
+        Stage bankruptWindow = new Stage();
+        Label message = new Label(players.get(turn).getName() + ", you are bankrupt.");
+        message.setFont(new Font("Arial Black", 32));
+        message.setTextFill(Color.DEEPPINK);
+        VBox vBox = new VBox(message);
+        try {
+            ImageView sadPlaneCrash = new ImageView(new Image(new FileInputStream("bankrupt.png")));
+            sadPlaneCrash.setFitHeight(450);
+            sadPlaneCrash.setFitWidth(600);
+            vBox.getChildren().add(sadPlaneCrash);
+        } catch (FileNotFoundException e) {
+            e.printStackTrace();
+        }
+        bankruptWindow.setScene(new Scene(vBox, 600, 450));
+        bankruptWindow.showAndWait();
+
+        gameBox.getChildren().remove(players.indexOf(loser) + 1);
+        playerGridPane.getChildren().remove(loser.getPlane());
+        players.remove(loser);
     }
 
     /**
      * Closing the game by declaring the last Player remaining as the winner.
      */
-    public void gameOver() {
-        gameBox.getChildren().clear();
+    public void gameOver() throws FileNotFoundException {
+        rollingPhase = false;
+        Stage urWinner = new Stage();
+        Label winnerLabel = new Label("Congratulations, " + players.get(0).getName() + ". YOU WON!");
+        winnerLabel.setTextFill(Color.MEDIUMORCHID);
+        winnerLabel.setFont(new Font("Arial Black", 36));
+        winnerLabel.setAlignment(Pos.CENTER);
+        ImageView brightFuture = new ImageView(new Image(new FileInputStream("future-pictures-1.jpg")));
+        brightFuture.setFitWidth(800);
+        brightFuture.setFitHeight(450);
 
-        /* CONGRATULATIONS, (Winner). \n YOU ARE THE WINNER! */
+        VBox vBox = new VBox(winnerLabel, brightFuture);
+        urWinner.setScene(new Scene(vBox, 1100, 566));
+        urWinner.show();
+
+        urWinner.setOnCloseRequest(windowEvent -> System.exit(0));
     }
 }

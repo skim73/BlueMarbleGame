@@ -1,12 +1,10 @@
 package sample;
 
 import javafx.geometry.HPos;
-import javafx.geometry.Pos;
 import javafx.geometry.VPos;
 import javafx.scene.image.Image;
 import javafx.scene.image.ImageView;
-import javafx.scene.layout.GridPane;
-import javafx.scene.layout.HBox;
+import javafx.scene.layout.*;
 
 import java.io.FileInputStream;
 import java.io.FileNotFoundException;
@@ -51,7 +49,7 @@ abstract class Property implements Comparable<Property> {
 
     @Override
     public String toString() {
-        return space + ". " + name;
+        return space + ". " + name + "\n(" + MoneyFormat.format(price) + ")";
     }
 }
 
@@ -80,6 +78,13 @@ class RegularProperty extends Property {
         this.prices = prices;
         this.rents = rents;
 
+        buildingImages[0][1] = new Image(new FileInputStream("img_buildings/house.png"));
+        buildingImages[0][2] = new Image(new FileInputStream("img_buildings/house2.png"));
+        buildingImages[1][1] = new Image(new FileInputStream("img_buildings/officebuilding.png"));
+        buildingImages[1][2] = new Image(new FileInputStream("img_buildings/officebuilding2.png"));
+        buildingImages[2][1] = new Image(new FileInputStream("img_buildings/hotel.png"));
+        buildingImages[2][2] = new Image(new FileInputStream("img_buildings/hotel2.png"));
+
         buildingPics = new HBox();
         for (int i = 0; i < 3; i++) {
             ImageView buildingIcon = new ImageView();
@@ -88,30 +93,28 @@ class RegularProperty extends Property {
             buildingPics.getChildren().add(buildingIcon);
         }
 
-        buildingImages[0][1] = new Image(new FileInputStream("img_buildings/house.png"));
-        buildingImages[0][2] = new Image(new FileInputStream("img_buildings/house2.png"));
-        buildingImages[1][1] = new Image(new FileInputStream("img_buildings/officebuilding.png"));
-        buildingImages[1][2] = new Image(new FileInputStream("img_buildings/officebuilding2.png"));
-        buildingImages[2][1] = new Image(new FileInputStream("img_buildings/hotel.png"));
-        buildingImages[2][2] = new Image(new FileInputStream("img_buildings/hotel2.png"));
-
-        if (30 < space) {
-            buildingPics.setRotate(270);
-            GridPane.setValignment(buildingPics, VPos.CENTER);
-            GridPane.setHalignment(buildingPics, HPos.LEFT);
-        }
-        else if (20 < space) {
-            buildingPics.setRotate(180);
-            GridPane.setValignment(buildingPics, VPos.BOTTOM);
-            GridPane.setHalignment(buildingPics, HPos.CENTER);
-        }
-        else if (10 < space) {
-            buildingPics.setRotate(90);
-            GridPane.setValignment(buildingPics, VPos.CENTER);
-            GridPane.setHalignment(buildingPics, HPos.RIGHT);
-        } else {
+        if (space < 10) {
+            GridPane.setConstraints(buildingPics,
+                Player.spaceToGrid[space][0], 12);
             GridPane.setValignment(buildingPics, VPos.TOP);
-            GridPane.setHalignment(buildingPics, HPos.CENTER);
+        }
+        else if (space < 20) {
+            GridPane.setConstraints(buildingPics,
+                2, Player.spaceToGrid[space][1]);
+            GridPane.setHalignment(buildingPics, HPos.RIGHT);
+            buildingPics.setRotate(90);
+        }
+        else if (space < 30) {
+            GridPane.setConstraints(buildingPics,
+                Player.spaceToGrid[space][0], 2);
+            GridPane.setValignment(buildingPics, VPos.BOTTOM);
+            buildingPics.setRotate(180);
+        }
+        else {
+            GridPane.setConstraints(buildingPics,
+                12, Player.spaceToGrid[space][1]);
+            GridPane.setHalignment(buildingPics, HPos.LEFT);
+            buildingPics.setRotate(270);
         }
     }
 
@@ -166,13 +169,9 @@ class RegularProperty extends Property {
         return prices;
     }
 
-    public double[] getRents() {
-        return rents;
-    }
-
     @Override
     public String toString() {
-        return super.toString() + " " + Arrays.toString(buildings);
+        return space + ". " + name + " " + Arrays.toString(buildings) + "\n(" + MoneyFormat.format(price) + ")" ;
     }
 }
 
