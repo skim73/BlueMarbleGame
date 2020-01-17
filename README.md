@@ -1,9 +1,11 @@
 # BlueMarbleGame
 JavaFX (13.0.1) application of a Korean spin-off of Monopoly board game
 
-Hello! This is Sabin Kim. 
-This is a JavaFX game of the Korean 1982 board game "Blue Marble" (부루마불).
-This is essentially the Korean spin-off of Monopoly, in which players travel around the board, buying properties around the world
+For now, this is only runnable via a professional Java IDE (I recommend IntelliJ since it's the IDE I used). Please run this on
+JDK 11+ & JavaFX SDK 11+.
+
+# ABOUT BLUE MARBLE 부루마불
+"Blue Marble" (부루마불) is essentially the 1982 Korean spin-off of Monopoly, in which players travel around the board, buying properties around the world
     and constructing buildings to raise their rents for the ultimate goal of being the richest player in the game.
     
 There are some rules and features that make Blue Marble and Monopoly distinct.
@@ -42,4 +44,4 @@ There are some rules and features that make Blue Marble and Monopoly distinct.
 (5) SEOUL OLYMPICS (39th space)
     - The 1988 Summer Olympics at Seoul still serves to be a huge source of nationalism. Blue Marble wanted to make this international
     event stand out by making it the most expensive property (by base price) in the game with the base price of $10.00M and a whopping
-    rent of $20.00M. Imagine buying Boardwalk and building a hotel there instantly!
+    rent of $20.00M. Imagine buying Boardwalk(US)/Mayfair(UK) and building a hotel there instantly!
