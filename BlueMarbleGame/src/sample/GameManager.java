@@ -190,7 +190,8 @@ class GameManager {
 
         gameBox.getChildren().add(playerTurnLabel);
         for (Player player : players) {
-            Label name = new Label(String.format("%-24s", player.getName()));
+            Label name = new Label(player.getName());
+            name.setPrefWidth(100);
             HBox hBox = new HBox(name, player.getMoneyText(), player.getPropertiesComboBox());
             hBox.setSpacing(64);
             hBox.setBorder(new Border(new BorderStroke(player.getPlayerColor(),
@@ -298,6 +299,7 @@ class GameManager {
         Label topLabel = new Label();
         topLabel.setFont(new Font("Arial Black", 20));
         topLabel.setAlignment(Pos.CENTER);
+        topLabel.setTextFill(Color.OLIVEDRAB);
         VBox rightVBox = new VBox(b0);
         rightVBox.setSpacing(16);
         rightVBox.setAlignment(Pos.CENTER);
@@ -320,8 +322,7 @@ class GameManager {
                 } catch (FileNotFoundException e) {
                     e.printStackTrace();
                 }
-            }
-            else
+            } else
                 playerTurnLabel.setText(nextTurn().getName() + "'s turn.");
         });
 
@@ -373,7 +374,7 @@ class GameManager {
                         b0.setText("YES");
                     else
                         b0.setText("YES (Pay $2.00M to " + (spaceToProperty.get(32).owner == null ?
-                        "BANKER" : spaceToProperty.get(32).owner.getName()) + ")");
+                            "BANKER" : spaceToProperty.get(32).owner.getName()) + ")");
                     b0.setOnAction(actionEvent -> {
                         try {
                             players.get(turn).changeMoney(-ColumbiaSpaceShuttle.ENTRY_FEE);
@@ -447,7 +448,15 @@ class GameManager {
                                 break;
                             case 1:
                             case 8:
-                                players.get(turn).changeMoney(-.50);
+                                try {
+                                    players.get(turn).payOther(null, -.50);
+                                } catch (BankruptcyException e) {
+                                    e.printStackTrace();
+                                }
+                                break;
+                            case 2:
+                            case 18:
+                                players.get(turn).changeMoney(1.00);
                                 break;
                             case 3:
                                 players.get(turn).changeMoney(2.00);
@@ -466,7 +475,11 @@ class GameManager {
                                 players.get(turn).directlyMove(5, false);
                                 break;
                             case 9:
-                                players.get(turn).changeMoney(-1.00);
+                                try {
+                                    players.get(turn).payOther(null, -1.00);
+                                } catch (BankruptcyException e) {
+                                    e.printStackTrace();
+                                }
                                 break;
                             case 10:
                                 players.get(turn).changeMoney(.50);
@@ -507,10 +520,11 @@ class GameManager {
                                             .50 * ((RegularProperty) property).getBuildings()[2];
                                     }
                                 }
-                                players.get(turn).changeMoney(-total);
-                                break;
-                            case 18:
-                                players.get(turn).changeMoney(1.00);
+                                try {
+                                    players.get(turn).payOther(null, -total);
+                                } catch (BankruptcyException e) {
+                                    e.printStackTrace();
+                                }
                                 break;
                             case 19:
                                 worldTour = true;
@@ -529,7 +543,11 @@ class GameManager {
                                             1.00 * ((RegularProperty) property).getBuildings()[2];
                                     }
                                 }
-                                players.get(turn).changeMoney(-total1);
+                                try {
+                                    players.get(turn).payOther(null, -total1);
+                                } catch (BankruptcyException e) {
+                                    e.printStackTrace();
+                                }
                                 break;
                             case 21:
                                 players.get(turn).changeMoney(3.00);
@@ -553,12 +571,14 @@ class GameManager {
                                             .50 * ((RegularProperty) property).getBuildings()[0];
                                     }
                                 }
-                                players.get(turn).changeMoney(-total2);
+                                try {
+                                    players.get(turn).payOther(null, -total2);
+                                } catch (BankruptcyException e) {
+                                    e.printStackTrace();
+                                }
                                 break;
                             case 26:
                                 players.get(turn).directlyMove(20, false);
-                                players.get(turn).changeMoney(welfare);
-                                welfare = 0;
                                 break;
                             case 27:
                             case 28:
@@ -576,15 +596,12 @@ class GameManager {
                 default:
                     Property property = spaceToProperty.get(space);
                     imageView.setImage(property.propertyCard);
-                    topLabel.setText((property.owner == null) ? "UNOWNED PROPERTY" :
-                        "OWNED BY: " + property.owner.getName());
-                    topLabel.setTextFill((property.owner == null ?
-                        Color.DARKTURQUOISE : property.owner.getPlayerColor()));
 
                     Label message = new Label();
                     rightVBox.getChildren().add(0, message);
 
                     if (property.owner == null) {
+                        topLabel.setText("UNOWNED PROPERTY");
                         message.setText("Would you like to purchase this property?");
                         b0.setText("YES (for " + MoneyFormat.format(property.price) + ")");
                         b0.setOnAction(actionEvent -> {
@@ -595,10 +612,13 @@ class GameManager {
                         b2.setOnAction(actionEvent -> popup.close());
                         rightVBox.getChildren().add(b2);
                     } else if (property.owner != players.get(turn)) {
+                        topLabel.setText("Owned by: " + property.owner.getName());
+                        topLabel.setTextFill(property.owner.getPlayerColor());
                         message.setText("You owe rent to " + property.owner.getName() + "!");
                         b0.setText("Pay rent (" + MoneyFormat.format(property.rent) + ")");
                         b0.setOnAction(actionEvent -> {
-                            b0.setOnAction(actionEvent1 -> {});
+                            b0.setOnAction(actionEvent1 -> {
+                            });
                             try {
                                 players.get(turn).payOther(property.owner, property.rent);
                             } catch (BankruptcyException e) {
@@ -617,6 +637,8 @@ class GameManager {
                             rightVBox.getChildren().add(b6);
                         }
                     } else {
+                        topLabel.setText("Owned by: " + property.owner.getName());
+                        topLabel.setTextFill(property.owner.getPlayerColor());
                         if (property instanceof RegularProperty) {
                             message.setText("Set the number of buildings at this property.\n" +
                                 "Construct/sell each building type");
@@ -767,8 +789,9 @@ class GameManager {
 
         Stage bankruptWindow = new Stage();
         Label message = new Label(players.get(turn).getName() + ", you are bankrupt.");
-        message.setFont(new Font("Arial Black", 32));
+        message.setFont(new Font("Arial Black", 24));
         message.setTextFill(Color.DEEPPINK);
+        message.setWrapText(true);
         VBox vBox = new VBox(message);
         try {
             ImageView sadPlaneCrash = new ImageView(new Image(new FileInputStream("bankrupt.png")));
@@ -794,14 +817,16 @@ class GameManager {
         Stage urWinner = new Stage();
         Label winnerLabel = new Label("Congratulations, " + players.get(0).getName() + ". YOU WON!");
         winnerLabel.setTextFill(Color.MEDIUMORCHID);
-        winnerLabel.setFont(new Font("Arial Black", 36));
+        winnerLabel.setFont(new Font("Arial Black", 24));
         winnerLabel.setAlignment(Pos.CENTER);
+        winnerLabel.setWrapText(true);
         ImageView brightFuture = new ImageView(new Image(new FileInputStream("future-pictures-1.jpg")));
         brightFuture.setFitWidth(800);
         brightFuture.setFitHeight(450);
 
         VBox vBox = new VBox(winnerLabel, brightFuture);
-        urWinner.setScene(new Scene(vBox, 1100, 566));
+        vBox.setAlignment(Pos.CENTER);
+        urWinner.setScene(new Scene(vBox, 1100, 500));
         urWinner.show();
 
         urWinner.setOnCloseRequest(windowEvent -> System.exit(0));

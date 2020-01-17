@@ -26,9 +26,10 @@ abstract class Property implements Comparable<Property> {
 
     /**
      * Constructor of a Property; owner is defaulted to NULL (the banker)
-     * @param name name of Property (constant)
+     *
+     * @param name  name of Property (constant)
      * @param price price of Property (changes with more buildings for RegularProperties)
-     * @param rent rent of Property (changes with more buildings for RegularProperties)
+     * @param rent  rent of Property (changes with more buildings for RegularProperties)
      */
     public Property(String name, double price, double rent, int space) {
         this.name = name;
@@ -68,9 +69,9 @@ class RegularProperty extends Property {
     final Image[][] buildingImages = new Image[3][3];
 
     /**
-     * @param name Name of property
+     * @param name   Name of property
      * @param prices {base price, HOUSE price, OFFICE_BUILDING price, HOTEL price}
-     * @param rents {base rent, HOUSE1 rent, HOUSE2 rent, OFFICE_BUILDING rent, HOTEL rent}
+     * @param rents  {base rent, HOUSE1 rent, HOUSE2 rent, OFFICE_BUILDING rent, HOTEL rent}
      */
     public RegularProperty(String name, double[] prices, double[] rents, int space) throws FileNotFoundException {
         super(name, prices[0], rents[0], space);
@@ -97,20 +98,17 @@ class RegularProperty extends Property {
             GridPane.setConstraints(buildingPics,
                 Player.spaceToGrid[space][0], 12);
             GridPane.setValignment(buildingPics, VPos.TOP);
-        }
-        else if (space < 20) {
+        } else if (space < 20) {
             GridPane.setConstraints(buildingPics,
                 2, Player.spaceToGrid[space][1]);
             GridPane.setHalignment(buildingPics, HPos.RIGHT);
             buildingPics.setRotate(90);
-        }
-        else if (space < 30) {
+        } else if (space < 30) {
             GridPane.setConstraints(buildingPics,
                 Player.spaceToGrid[space][0], 2);
             GridPane.setValignment(buildingPics, VPos.BOTTOM);
             buildingPics.setRotate(180);
-        }
-        else {
+        } else {
             GridPane.setConstraints(buildingPics,
                 12, Player.spaceToGrid[space][1]);
             GridPane.setHalignment(buildingPics, HPos.LEFT);
@@ -120,19 +118,19 @@ class RegularProperty extends Property {
 
     /**
      * Specifies the number of each building type the Player wants at this Property
+     *
      * @param request {# HOUSES to have, # OFFICE BUILDINGS to have, # HOTELS to have}
      */
     public void construct(int[] request) {
         price = prices[0];
         rent = 0;
-        if (Arrays.equals(request, new int[]{0, 0, 0})){
+        if (Arrays.equals(request, new int[]{0, 0, 0})) {
             rent = rents[0];
         } else {
             if (request[0] == 1) {
                 rent = rents[1];
                 price += prices[1];
-            }
-            else if (request[0] == 2) {
+            } else if (request[0] == 2) {
                 rent = rents[2];
                 price += prices[1] * 2;
             }
@@ -171,7 +169,7 @@ class RegularProperty extends Property {
 
     @Override
     public String toString() {
-        return space + ". " + name + " " + Arrays.toString(buildings) + "\n(" + MoneyFormat.format(price) + ")" ;
+        return space + ". " + name + " " + Arrays.toString(buildings) + "\n(" + MoneyFormat.format(price) + ")";
     }
 }
 

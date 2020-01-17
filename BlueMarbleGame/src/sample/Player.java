@@ -52,10 +52,11 @@ class Player {
     public Player(int playerNum) {
         this.name = "Player " + playerNum;
         this.plane = null;
-        money = Math.random() < .5 ? 30.00 : 6.00;
+        money = 30.00;
         moneyText = new Label(MoneyFormat.format(money));
         moneyText.setFont(new Font("Arial Black", 16));
         moneyText.setTextFill(Color.FORESTGREEN);
+        moneyText.setPrefWidth(100);
         space = 0;
         properties = new ArrayList<>(29);
         propertiesComboBox = new ComboBox<>();
@@ -93,7 +94,7 @@ class Player {
         moveAnimation.setCycleCount(Math.abs(delta));
         if (delta > 0) {
             moveAnimation.getKeyFrames().setAll(new KeyFrame(
-                Duration.millis(40),
+                Duration.millis(200),
                 actionEvent -> {
                     if (++space == 40) {
                         space = 0;
@@ -245,8 +246,9 @@ class Player {
 
     /**
      * Sells property to the specified player
-     * @param sold      Property being sold
-     * @param receiver  to whom the Property is being sold (if null, Banker)
+     *
+     * @param sold     Property being sold
+     * @param receiver to whom the Property is being sold (if null, Banker)
      */
     public void sell(Property sold, Player receiver) {
         if (sold == null)
@@ -272,7 +274,7 @@ class Player {
      * Sets up and shows the window where the Player can handle their debt to another
      *
      * @param other the Player to whom the debtor (this Player) owes money
-     * @param debt the amount of debt this Player owes to other
+     * @param debt  the amount of debt this Player owes to other
      * @return false if Player has successfully paid off all their debt; true if Player declared bankruptcy
      */
     public double openDebtWindow(Player other, double debt) {
@@ -307,13 +309,13 @@ class Player {
 
         Button sellButton = new Button("SELL");
 
-
+        boolean[] soldBuildings = {false};
         sellButton.setOnAction(actionEvent -> {
             Property sold = properties.getSelectionModel().getSelectedItem();
             if (sold == null)
                 return;
             if (sold instanceof RegularProperty &&
-                !Arrays.equals(((RegularProperty) sold).getBuildings(), new int[] {0,0,0})) {
+                !Arrays.equals(((RegularProperty) sold).getBuildings(), new int[]{0, 0, 0})) {
 
                 Stage sellBuildingStage = new Stage();
                 Label prompt = new Label("Do you want to sell buildings to the BANKER first?");
@@ -369,12 +371,19 @@ class Player {
                     queriesLabels[2].setText(queries[2] + "");
                 });
 
-                Label house = new Label("HOUSES: ");
+                Label house = new Label("HOUSES: \n(" +
+                    MoneyFormat.format(((RegularProperty) sold).getPrices()[1]) + " each)");
                 house.setTextFill(Color.RED);
-                Label officeBuilding = new Label("OFFICE\nBUILDINGS:");
-                officeBuilding.setTextFill(Color.LIMEGREEN);
-                Label hotel = new Label("HOTELS: ");
+                Label officeBuilding = new Label("OFFICE\nBUILDINGS: \n(" +
+                    MoneyFormat.format(((RegularProperty) sold).getPrices()[2]) + " each)");
+                officeBuilding.setTextFill(Color.GREEN);
+                Label hotel = new Label("HOTELS: \n(" +
+                    MoneyFormat.format(((RegularProperty) sold).getPrices()[3]) + " each)");
                 hotel.setTextFill(Color.DODGERBLUE);
+
+                minusButtonHouse.setVisible(false);
+                minusButtonOfficeBuilding.setVisible(false);
+                minusButtonHotel.setVisible(false);
 
                 HBox houseQuery = new HBox(house, minusButtonHouse, queriesLabels[0], plusButtonHouse);
                 HBox officeBuildingQuery = new HBox(officeBuilding, minusButtonOfficeBuilding,
@@ -413,12 +422,11 @@ class Player {
                     } else {
                         debtText.setText("CURRENT DEBT: " + MoneyFormat.format(debtArray[0]));
                     }
-                });
-
-                Button doneButton = new Button("Done");
-                doneButton.setOnAction(actionEvent1 -> {
+                    properties.getItems().set(properties.getItems().indexOf(sold), sold);
+                    soldBuildings[0] = true;
                     sellBuildingStage.close();
                 });
+
                 Button justSellAll = new Button("Sell property with all these buildings");
                 justSellAll.setOnAction(actionEvent1 -> {
                     Alert alert1 = new Alert(Alert.AlertType.CONFIRMATION);
@@ -443,27 +451,30 @@ class Player {
 
                 VBox vBox = new VBox(prompt, houseQuery, officeBuildingQuery, hotelQuery, b0);
                 vBox.setSpacing(16);
+                vBox.setAlignment(Pos.CENTER);
 
                 sellBuildingStage.setScene(new Scene(vBox, 500, 375));
 
                 sellBuildingStage.showAndWait();
             }
-            Alert alert1 = new Alert(Alert.AlertType.CONFIRMATION);
-            alert1.setTitle("Will you sell this property?");
-            alert1.setHeaderText("Are you sure you want to sell this property?");
-            alert1.setContentText("Once you select OK, this property will be \npermanently sold for " +
-                MoneyFormat.format(sold.price) + ".");
-            Optional<ButtonType> option = alert1.showAndWait();
-            if (option.isPresent() && option.get() == alert1.getButtonTypes().get(0)) {
-                sell(sold, other);
-                debtArray[0] -= sold.price;
-                properties.getItems().remove(sold);
+            if (!soldBuildings[0]) {
+                Alert alert1 = new Alert(Alert.AlertType.CONFIRMATION);
+                alert1.setTitle("Will you sell this property?");
+                alert1.setHeaderText("Are you sure you want to sell this property?");
+                alert1.setContentText("Once you select OK, this property will be \npermanently sold for " +
+                    MoneyFormat.format(sold.price) + ".");
+                Optional<ButtonType> option = alert1.showAndWait();
+                if (option.isPresent() && option.get() == alert1.getButtonTypes().get(0)) {
+                    sell(sold, other);
+                    debtArray[0] -= sold.price;
+                    properties.getItems().remove(sold);
 
-                if (debtArray[0] <= 0) {
-                    debtText.setText("Your debts have been covered.\nYou may safely close this window.");
-                    debtText.setTextFill(Color.FORESTGREEN);
-                } else {
-                    debtText.setText("CURRENT DEBT: " + MoneyFormat.format(debtArray[0]));
+                    if (debtArray[0] <= 0) {
+                        debtText.setText("Your debts have been covered.\nYou may safely close this window.");
+                        debtText.setTextFill(Color.FORESTGREEN);
+                    } else {
+                        debtText.setText("CURRENT DEBT: " + MoneyFormat.format(debtArray[0]));
+                    }
                 }
             }
         });
@@ -488,7 +499,7 @@ class Player {
         });
 
         pane.setBottom(new Rectangle(32, 32));
-        ((Rectangle)pane.getBottom()).setFill(Color.GHOSTWHITE);
+        ((Rectangle) pane.getBottom()).setFill(Color.GHOSTWHITE);
         debtWindow.setScene(new Scene(pane, 500, 375));
         debtWindow.showAndWait();
         return debtArray[0];

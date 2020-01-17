@@ -75,6 +75,9 @@ public class Main extends Application {
         // Row 13 & Column 13 same as Row 1 & Column 1
         playerGridPane.getColumnConstraints().add(new ColumnConstraints(CORNER_RATIO * boardIV.getFitWidth()));
         playerGridPane.getRowConstraints().add(new RowConstraints(CORNER_RATIO * boardIV.getFitHeight()));
+        // Row 14 & Column 14 same as Row 0 & Column 0
+        playerGridPane.getColumnConstraints().add(new ColumnConstraints(FRAME_RATIO * boardIV.getFitWidth()));
+        playerGridPane.getRowConstraints().add(new RowConstraints(FRAME_RATIO * boardIV.getFitHeight()));
 
         boardStackPane.getChildren().add(playerGridPane);
 
@@ -139,10 +142,10 @@ public class Main extends Application {
                     String colorChoice = ((ComboBox<String>)
                         ((HBox) playerSetup[i].getChildren().get(1)).getChildren().get(1)).getValue();
                     if (!colors.add(colorChoice)) {
-                            Label repeatedColorLabel = new Label("A plane color cannot be repeated. " +
-                                "Please select again.");
-                            repeatedColorLabel.setTextFill(Color.RED);
-                            gameBox.getChildren().add(repeatedColorLabel);
+                        Label repeatedColorLabel = new Label("A plane color cannot be repeated. " +
+                            "Please select again.");
+                        repeatedColorLabel.setTextFill(Color.RED);
+                        gameBox.getChildren().add(repeatedColorLabel);
                         return;
                     }
                     try {
