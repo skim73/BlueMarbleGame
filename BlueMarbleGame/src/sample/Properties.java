@@ -5,6 +5,8 @@ import javafx.geometry.VPos;
 import javafx.scene.image.Image;
 import javafx.scene.image.ImageView;
 import javafx.scene.layout.*;
+import javafx.scene.paint.Color;
+import javafx.scene.shape.Rectangle;
 
 import java.io.FileInputStream;
 import java.io.FileNotFoundException;
@@ -21,6 +23,7 @@ abstract class Property implements Comparable<Property> {
     protected double rent;
     protected Player owner;
     protected Image propertyCard = null;  // later assigned with setPropertyCard(Image)
+    protected Rectangle ownerRectangle;
 
     final int space;
 
@@ -37,6 +40,23 @@ abstract class Property implements Comparable<Property> {
         this.rent = rent;
         owner = null;
         this.space = space;
+        ownerRectangle = new Rectangle(16, 16);
+        ownerRectangle.setFill(Color.TRANSPARENT);
+        if (space < 10) {
+            GridPane.setConstraints(ownerRectangle,
+                Player.spaceToGrid[space][0], Player.spaceToGrid[space][1] + 1);
+        } else if (space < 20) {
+            GridPane.setConstraints(ownerRectangle,
+                Player.spaceToGrid[space][0] - 1, Player.spaceToGrid[space][1]);
+        } else if (space < 30) {
+            GridPane.setConstraints(ownerRectangle,
+                Player.spaceToGrid[space][0], Player.spaceToGrid[space][1] - 1);
+        } else {
+            GridPane.setConstraints(ownerRectangle,
+                Player.spaceToGrid[space][0] + 1, Player.spaceToGrid[space][1] );
+        }
+        GridPane.setHalignment(ownerRectangle, HPos.CENTER);
+        GridPane.setValignment(ownerRectangle, VPos.CENTER);
     }
 
     public void setPropertyCard(Image image) {

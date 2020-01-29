@@ -98,7 +98,7 @@ class Player {
                 actionEvent -> {
                     if (++space == 40) {
                         space = 0;
-                        System.out.print("PAY DAY! ");
+                        AudioClips.payday.play();
                         changeMoney(2.00);
                     }
                     GridPane.setConstraints(plane, spaceToGrid[space][0], spaceToGrid[space][1]);
@@ -107,7 +107,7 @@ class Player {
         } else {
             // ONLY FROM "Moving Day" GOLDEN KEY CARDS
             moveAnimation.getKeyFrames().setAll(new KeyFrame(
-                Duration.millis(300),
+                Duration.millis(200),
                 actionEvent -> {
                     if (--space == -1) {
                         space = 39;
@@ -133,8 +133,10 @@ class Player {
         }
         moveAnimation.setRate(4.5);
         move(destination - space, false);
-        if (fromSpaceStation)
+        if (fromSpaceStation) {
+            AudioClips.spaceTravel.play();
             spaceStation = false;
+        }
 
         GameManager.popup.setOnHidden(windowEvent -> {
         });
@@ -183,6 +185,7 @@ class Player {
             changeMoney(-property.price);
             properties.add(property);
             propertiesComboBox.getItems().add(property);
+            property.ownerRectangle.setFill(playerColor);
             Collections.sort(properties);
             Collections.sort(propertiesComboBox.getItems());
             property.owner = this;
@@ -191,6 +194,7 @@ class Player {
             alert.setTitle("You don't have enough money!");
             alert.setHeaderText(name + ", you can't afford this property!");
             alert.setContentText("Try again when you do have enough money.");
+            AudioClips.buttonAudioClips[6].play(.5);
             alert.showAndWait();
         }
     }
@@ -217,6 +221,7 @@ class Player {
             alert.setTitle("You don't have enough money!");
             alert.setHeaderText(name + ", you can't afford to construct these buildings at this property!");
             alert.setContentText("Try again when you do have enough money.");
+            AudioClips.buttonAudioClips[6].play(.5);
             alert.showAndWait();
             return false;
         }
@@ -236,6 +241,7 @@ class Player {
                 other.changeMoney(amount);
             }
         } catch (NotEnoughMoneyException e) {
+            AudioClips.buttonAudioClips[6].play(.5);
             if (openDebtWindow(other, amount - money) > 0) {
                 throw new BankruptcyException(other);
             } else {
@@ -258,12 +264,14 @@ class Player {
         propertiesComboBox.getItems().remove(sold);
         if (receiver != null) {
             receiver.properties.add(sold);
+            sold.ownerRectangle.setFill(receiver.getPlayerColor());
             receiver.propertiesComboBox.getItems().add(sold);
             Collections.sort(receiver.properties);
             Collections.sort(receiver.propertiesComboBox.getItems());
         } else {
             if (sold instanceof RegularProperty)
                 ((RegularProperty) sold).deconstruct();
+            sold.ownerRectangle.setFill(Color.TRANSPARENT);
         }
         Collections.sort(properties);
         Collections.sort(propertiesComboBox.getItems());
@@ -291,8 +299,9 @@ class Player {
         BorderPane pane = new BorderPane();
         Label promptLabel = new Label("You must pay off your debt to " +
             (other == null ? "BANKER" : other.getName()) + "\nbefore closing this window.");
-        Label warningLabel = new Label("If you close this window without paying all your debt, YOU ARE " +
+        Label warningLabel = new Label("If you close this window without paying all your debt, \nYOU ARE " +
             "DECLARING BANKRUPTCY.");
+        warningLabel.setFont(new Font("Arial Black", 14));
         warningLabel.setTextFill(Color.DEEPPINK);
         Label debtText = new Label("CURRENT DEBT: " + MoneyFormat.format(debt));
         debtText.setTextFill(Color.CRIMSON);
@@ -309,7 +318,6 @@ class Player {
 
         Button sellButton = new Button("SELL");
 
-        boolean[] soldBuildings = {false};
         sellButton.setOnAction(actionEvent -> {
             Property sold = properties.getSelectionModel().getSelectedItem();
             if (sold == null)
@@ -335,36 +343,42 @@ class Player {
                 Button plusButtonHotel = new Button("+");
 
                 minusButtonHouse.setOnAction(actionEvent1 -> {
+                    AudioClips.buttonAudioClips[1].play(.5);
                     if (--queries[0] == 0)
                         minusButtonHouse.setVisible(false);
                     plusButtonHouse.setVisible(true);
                     queriesLabels[0].setText(queries[0] + "");
                 });
                 plusButtonHouse.setOnAction(actionEvent1 -> {
+                    AudioClips.buttonAudioClips[1].play(.5);
                     if (++queries[0] == ((RegularProperty) sold).getBuildings()[0])
                         plusButtonHouse.setVisible(false);
                     minusButtonHouse.setVisible(true);
                     queriesLabels[0].setText(queries[0] + "");
                 });
                 minusButtonOfficeBuilding.setOnAction(actionEvent1 -> {
+                    AudioClips.buttonAudioClips[1].play(.5);
                     if (--queries[1] == 0)
                         minusButtonOfficeBuilding.setVisible(false);
                     plusButtonOfficeBuilding.setVisible(true);
                     queriesLabels[1].setText(queries[1] + "");
                 });
                 plusButtonOfficeBuilding.setOnAction(actionEvent1 -> {
+                    AudioClips.buttonAudioClips[1].play(.5);
                     if (++queries[1] == ((RegularProperty) sold).getBuildings()[1])
                         plusButtonOfficeBuilding.setVisible(false);
                     minusButtonOfficeBuilding.setVisible(true);
                     queriesLabels[1].setText(queries[1] + "");
                 });
                 minusButtonHotel.setOnAction(actionEvent1 -> {
+                    AudioClips.buttonAudioClips[1].play(.5);
                     if (--queries[2] == 0)
                         minusButtonHotel.setVisible(false);
                     plusButtonHotel.setVisible(true);
                     queriesLabels[2].setText(queries[2] + "");
                 });
                 plusButtonHotel.setOnAction(actionEvent1 -> {
+                    AudioClips.buttonAudioClips[1].play(.5);
                     if (++queries[2] == ((RegularProperty) sold).getBuildings()[2])
                         plusButtonHotel.setVisible(false);
                     minusButtonHotel.setVisible(true);
@@ -397,16 +411,13 @@ class Player {
                 hotelQuery.setSpacing(20);
 
                 if (((RegularProperty) sold).getBuildings()[0] == 0) {
-                    houseQuery.getChildren().remove(minusButtonHouse);
-                    houseQuery.getChildren().remove(plusButtonHouse);
+                    plusButtonHouse.setVisible(false);
                 }
                 if (((RegularProperty) sold).getBuildings()[1] == 0) {
-                    officeBuildingQuery.getChildren().remove(minusButtonOfficeBuilding);
-                    officeBuildingQuery.getChildren().remove(plusButtonOfficeBuilding);
+                    plusButtonOfficeBuilding.setVisible(false);
                 }
                 if (((RegularProperty) sold).getBuildings()[2] == 0) {
-                    hotelQuery.getChildren().remove(minusButtonHotel);
-                    hotelQuery.getChildren().remove(plusButtonHotel);
+                    plusButtonHotel.setVisible(false);
                 }
 
                 b0.setOnAction(actionEvent1 -> {
@@ -423,7 +434,6 @@ class Player {
                         debtText.setText("CURRENT DEBT: " + MoneyFormat.format(debtArray[0]));
                     }
                     properties.getItems().set(properties.getItems().indexOf(sold), sold);
-                    soldBuildings[0] = true;
                     sellBuildingStage.close();
                 });
 
@@ -446,18 +456,18 @@ class Player {
                         } else {
                             debtText.setText("CURRENT DEBT: " + MoneyFormat.format(debtArray[0]));
                         }
+                        sellBuildingStage.close();
                     }
                 });
 
-                VBox vBox = new VBox(prompt, houseQuery, officeBuildingQuery, hotelQuery, b0);
+                VBox vBox = new VBox(prompt, houseQuery, officeBuildingQuery, hotelQuery, b0, justSellAll);
                 vBox.setSpacing(16);
                 vBox.setAlignment(Pos.CENTER);
 
                 sellBuildingStage.setScene(new Scene(vBox, 500, 375));
 
                 sellBuildingStage.showAndWait();
-            }
-            if (!soldBuildings[0]) {
+            } else {
                 Alert alert1 = new Alert(Alert.AlertType.CONFIRMATION);
                 alert1.setTitle("Will you sell this property?");
                 alert1.setHeaderText("Are you sure you want to sell this property?");
@@ -517,6 +527,7 @@ class Player {
         propertiesComboBox.getItems().addAll(properties);
         for (int i = properties.size() - 1; i >= 0; i--) {
             properties.get(i).owner = this;
+            properties.get(i).ownerRectangle.setFill(playerColor);
             other.propertiesComboBox.getItems().remove(properties.get(i));
             other.properties.remove(properties.get(i));
         }
@@ -530,6 +541,7 @@ class Player {
      * @return TRUE if declared bankruptcy; FALSE if cancelled.
      */
     public boolean declareBankruptcy() {
+        AudioClips.buttonAudioClips[6].play(.5);
         Alert alert = new Alert(Alert.AlertType.WARNING,
             "You will be eliminated from the game, and all your properties will belong to whom you owe.",
             new ButtonType("yes. T-T", ButtonBar.ButtonData.YES),

@@ -12,6 +12,7 @@ import javafx.scene.control.*;
 import javafx.scene.image.Image;
 import javafx.scene.image.ImageView;
 import javafx.scene.layout.*;
+import javafx.scene.media.AudioClip;
 import javafx.scene.paint.Color;
 import javafx.scene.shape.Rectangle;
 import javafx.scene.text.Font;
@@ -21,6 +22,7 @@ import javafx.util.Duration;
 import java.io.File;
 import java.io.FileInputStream;
 import java.io.FileNotFoundException;
+import java.nio.file.Paths;
 import java.util.*;
 
 import static sample.FillSpaceToPropertyMap.fill;
@@ -164,6 +166,7 @@ class GameManager {
                 }
             }
             if (rollingPhase) {
+                AudioClips.dice[0].play();
                 rollingDiceAnimation.playFromStart();
             }
         });
@@ -204,8 +207,10 @@ class GameManager {
             if (property instanceof RegularProperty) {
                 playerGridPane.getChildren().add(((RegularProperty) property).buildingPics);
             }
+            playerGridPane.getChildren().add(property.ownerRectangle);
         }
 
+        AudioClips.startup.play(.7);
     }
 
     /**
@@ -272,6 +277,8 @@ class GameManager {
      */
     public int rollDice() {
         int die1Value = random.nextInt(6) + 1, die2Value = random.nextInt(6) + 1;
+        AudioClips.dice[0].stop();
+        AudioClips.dice[1].play();
         gotDouble = die1Value == die2Value;
         die1.setImage(dice.get(die1Value));
         die2.setImage(dice.get(die2Value));
@@ -294,8 +301,14 @@ class GameManager {
         ImageView imageView = new ImageView();
         imageView.setFitWidth(400);
         imageView.setFitHeight(300);
+
         Button b0 = new Button("OK");
-        b0.setOnAction(actionEvent -> popup.close());
+        b0.setOnAction(actionEvent -> {
+            popup.close();
+            AudioClips.buttonAudioClips[0].play(.5);
+        });
+        b0.setOnMouseEntered(mouseEvent -> AudioClips.buttonAudioClips[3].play(.5));
+
         Label topLabel = new Label();
         topLabel.setFont(new Font("Arial Black", 20));
         topLabel.setAlignment(Pos.CENTER);
@@ -323,7 +336,8 @@ class GameManager {
                     e.printStackTrace();
                 }
             } else
-                playerTurnLabel.setText(nextTurn().getName() + "'s turn.");
+                if (!worldTour)
+                    playerTurnLabel.setText(nextTurn().getName() + "'s turn.");
         });
 
 
@@ -331,29 +345,38 @@ class GameManager {
         popupBorderPane.setTop(topLabel);
         popupBorderPane.setRight(rightHBox);
 
+        AudioClip popupIntroSound = AudioClips.property;
+
         try {
             switch (space) {
                 case 0:
+                    popupIntroSound = null;
                     imageView.setImage(new Image(new FileInputStream("img_properties/0.png")));
                     topLabel.setText("GO space: You got $2.00M paycheck!");
                     b0.setText("PAY DAY!");
-                    b0.setOnAction(actionEvent -> popup.close());
+                    b0.setOnAction(actionEvent -> {
+                        popup.close();
+                        AudioClips.buttonAudioClips[0].play(.5);
+                    });
                     break;
                 case 10:
                     imageView.setImage(new Image(new FileInputStream("img_properties/10.png")));
                     topLabel.setText("You are stuck in the Deserted Island for 3 turns.");
                     b0.setText("SOS!");
                     b0.setOnAction(actionEvent -> {
+                        AudioClips.buttonAudioClips[0].play(.5);
                         gotDouble = false;
                         players.get(turn).landOnDesertedIsland();
                         popup.close();
                     });
                     break;
                 case 20:
+                    popupIntroSound = AudioClips.welfare;
                     imageView.setImage(new Image(new FileInputStream("img_properties/20.png")));
                     topLabel.setText("Welfare Zone has " + MoneyFormat.format(welfare) + " for you!");
                     b0.setText("Thank you, welfare!");
                     b0.setOnAction(actionEvent -> {
+                        AudioClips.buttonAudioClips[0].play(.5);
                         players.get(turn).changeMoney(welfare);
                         welfare = 0;
                         welfareText.setText(MoneyFormat.format(welfare));
@@ -378,6 +401,7 @@ class GameManager {
                     b0.setOnAction(actionEvent -> {
                         try {
                             players.get(turn).changeMoney(-ColumbiaSpaceShuttle.ENTRY_FEE);
+                            AudioClips.purchase.play();
                             if (spaceToProperty.get(32).owner != null)
                                 spaceToProperty.get(32).owner.changeMoney(ColumbiaSpaceShuttle.ENTRY_FEE);
                             players.get(turn).enterSpaceStation();
@@ -388,14 +412,20 @@ class GameManager {
                             alert.setHeaderText("You can't afford a ticket to Space Station.");
                             alert.setContentText("Try again when you do have enough money.");
                             alert.showAndWait();
+                            AudioClips.buttonAudioClips[6].play();
                         }
                         popup.close();
                     });
                     Button b1 = new Button("No Thanks.");
-                    b1.setOnAction(actionEvent -> popup.close());
+                    b1.setOnMouseEntered(mouseEvent -> AudioClips.buttonAudioClips[5].play(.5));
+                    b1.setOnAction(actionEvent -> {
+                        popup.close();
+                        AudioClips.buttonAudioClips[2].play(.5);
+                    });
                     rightVBox.getChildren().add(b1);
                     break;
                 case 38:
+                    popupIntroSound = AudioClips.welfareTax;
                     imageView.setImage(new Image(new FileInputStream("img_properties/38.png")));
                     topLabel.setText("Please donate $1.50M to Welfare Zone. \nThank you for your contributions!");
                     b0.setText("Donate $1.50M");
@@ -417,6 +447,7 @@ class GameManager {
                 case 17:
                 case 22:
                 case 35:
+                    popupIntroSound = AudioClips.goldenKey;
                     GoldenKey goldenKey = drawGoldenKeyCard();
                     imageView.setImage(goldenKey.card);
                     topLabel.setText("GOLDEN KEY CARD");
@@ -434,6 +465,7 @@ class GameManager {
                     }
                     Property finalMostExpensive = mostExpensive;
                     b0.setOnAction(actionEvent -> {
+                        AudioClips.buttonAudioClips[0].play(.5);
                         switch (goldenKey.id) {
                             case 0:
                                 for (Player opponent : players) {
@@ -449,7 +481,7 @@ class GameManager {
                             case 1:
                             case 8:
                                 try {
-                                    players.get(turn).payOther(null, -.50);
+                                    players.get(turn).payOther(null, .50);
                                 } catch (BankruptcyException e) {
                                     e.printStackTrace();
                                 }
@@ -476,7 +508,7 @@ class GameManager {
                                 break;
                             case 9:
                                 try {
-                                    players.get(turn).payOther(null, -1.00);
+                                    players.get(turn).payOther(null, 1.00);
                                 } catch (BankruptcyException e) {
                                     e.printStackTrace();
                                 }
@@ -521,7 +553,7 @@ class GameManager {
                                     }
                                 }
                                 try {
-                                    players.get(turn).payOther(null, -total);
+                                    players.get(turn).payOther(null, total);
                                 } catch (BankruptcyException e) {
                                     e.printStackTrace();
                                 }
@@ -544,7 +576,7 @@ class GameManager {
                                     }
                                 }
                                 try {
-                                    players.get(turn).payOther(null, -total1);
+                                    players.get(turn).payOther(null, total1);
                                 } catch (BankruptcyException e) {
                                     e.printStackTrace();
                                 }
@@ -572,7 +604,7 @@ class GameManager {
                                     }
                                 }
                                 try {
-                                    players.get(turn).payOther(null, -total2);
+                                    players.get(turn).payOther(null, total2);
                                 } catch (BankruptcyException e) {
                                     e.printStackTrace();
                                 }
@@ -603,15 +635,25 @@ class GameManager {
                     if (property.owner == null) {
                         topLabel.setText("UNOWNED PROPERTY");
                         message.setText("Would you like to purchase this property?");
+
                         b0.setText("YES (for " + MoneyFormat.format(property.price) + ")");
                         b0.setOnAction(actionEvent -> {
+                            AudioClips.purchase.play(.5);
                             players.get(turn).purchase(property);
                             popup.close();
                         });
+
                         Button b2 = new Button("NO");
-                        b2.setOnAction(actionEvent -> popup.close());
+                        b2.setOnAction(actionEvent -> {
+                            popup.close();
+                            AudioClips.buttonAudioClips[2].play(.5);
+                        });
+                        b2.setOnMouseEntered(mouseEvent -> AudioClips.buttonAudioClips[5].play(.5));
+
                         rightVBox.getChildren().add(b2);
+
                     } else if (property.owner != players.get(turn)) {
+                        popupIntroSound = AudioClips.rent;
                         topLabel.setText("Owned by: " + property.owner.getName());
                         topLabel.setTextFill(property.owner.getPlayerColor());
                         message.setText("You owe rent to " + property.owner.getName() + "!");
@@ -621,6 +663,7 @@ class GameManager {
                             });
                             try {
                                 players.get(turn).payOther(property.owner, property.rent);
+                                AudioClips.buttonAudioClips[0].play(.5);
                             } catch (BankruptcyException e) {
                                 eliminate(players.get(turn), e.shark);
                             }
@@ -632,11 +675,14 @@ class GameManager {
                             Button b6 = new Button("...or use Complimentary Ticket!");
                             b6.setOnAction(actionEvent -> {
                                 players.get(turn).useComplimentaryTicket();
+                                AudioClips.goldenKey.play();
                                 popup.close();
                             });
+                            b6.setOnMouseEntered(mouseEvent -> AudioClips.buttonAudioClips[3].play(.5));
                             rightVBox.getChildren().add(b6);
                         }
                     } else {
+                        popupIntroSound = AudioClips.build;
                         topLabel.setText("Owned by: " + property.owner.getName());
                         topLabel.setTextFill(property.owner.getPlayerColor());
                         if (property instanceof RegularProperty) {
@@ -657,37 +703,56 @@ class GameManager {
                             Button minusButtonHotel = new Button("-");
                             Button plusButtonHotel = new Button("+");
 
+                            minusButtonHouse.setOnMouseEntered(
+                                mouseEvent -> AudioClips.buttonAudioClips[4].play(.5));
+                            plusButtonHouse.setOnMouseEntered(
+                                mouseEvent -> AudioClips.buttonAudioClips[4].play(.5));
+                            minusButtonOfficeBuilding.setOnMouseEntered(
+                                mouseEvent -> AudioClips.buttonAudioClips[4].play(.5));
+                            plusButtonOfficeBuilding.setOnMouseEntered(
+                                mouseEvent -> AudioClips.buttonAudioClips[4].play(.5));
+                            minusButtonHotel.setOnMouseEntered(
+                                mouseEvent -> AudioClips.buttonAudioClips[4].play(.5));
+                            plusButtonHotel.setOnMouseEntered(
+                                mouseEvent -> AudioClips.buttonAudioClips[4].play(.5));
+
                             minusButtonHouse.setOnAction(actionEvent -> {
+                                AudioClips.buttonAudioClips[1].play(.5);
                                 if (--queries[0] == 0)
                                     minusButtonHouse.setVisible(false);
                                 plusButtonHouse.setVisible(true);
                                 queriesLabels[0].setText(queries[0] + "");
                             });
                             plusButtonHouse.setOnAction(actionEvent -> {
+                                AudioClips.buttonAudioClips[1].play(.5);
                                 if (++queries[0] == 2)
                                     plusButtonHouse.setVisible(false);
                                 minusButtonHouse.setVisible(true);
                                 queriesLabels[0].setText(queries[0] + "");
                             });
                             minusButtonOfficeBuilding.setOnAction(actionEvent -> {
+                                AudioClips.buttonAudioClips[1].play(.5);
                                 if (--queries[1] == 0)
                                     minusButtonOfficeBuilding.setVisible(false);
                                 plusButtonOfficeBuilding.setVisible(true);
                                 queriesLabels[1].setText(queries[1] + "");
                             });
                             plusButtonOfficeBuilding.setOnAction(actionEvent -> {
+                                AudioClips.buttonAudioClips[1].play(.5);
                                 if (++queries[1] == 2)
                                     plusButtonOfficeBuilding.setVisible(false);
                                 minusButtonOfficeBuilding.setVisible(true);
                                 queriesLabels[1].setText(queries[1] + "");
                             });
                             minusButtonHotel.setOnAction(actionEvent -> {
+                                AudioClips.buttonAudioClips[1].play(.5);
                                 if (--queries[2] == 0)
                                     minusButtonHotel.setVisible(false);
                                 plusButtonHotel.setVisible(true);
                                 queriesLabels[2].setText(queries[2] + "");
                             });
                             plusButtonHotel.setOnAction(actionEvent -> {
+                                AudioClips.buttonAudioClips[1].play(.5);
                                 if (++queries[2] == 2)
                                     plusButtonHotel.setVisible(false);
                                 minusButtonHotel.setVisible(true);
@@ -716,6 +781,7 @@ class GameManager {
                             b0.setOnAction(actionEvent -> {
                                 if (players.get(turn).build((RegularProperty) property, queries))
                                     popup.close();
+                                AudioClips.purchase.play();
                             });
 
                             if (((RegularProperty) property).getBuildings()[0] == 0)
@@ -734,14 +800,24 @@ class GameManager {
                                 hotelQuery.getChildren().get(3).setVisible(false);
 
                             Button b3 = new Button("No thanks.");
-                            b3.setOnAction(actionEvent -> popup.close());
+                            b3.setOnAction(actionEvent -> {
+                                popup.close();
+                                AudioClips.build.stop();
+                                AudioClips.buttonAudioClips[2].play(.5);
+                            });
+                            b3.setOnMouseEntered(mouseEvent -> AudioClips.buttonAudioClips[5].play(.5));
 
                             rightVBox.getChildren().setAll(message, money, houseQuery, officeBuildingQuery,
                                 hotelQuery, b0, b3);
 
                         } else {
                             message.setText("You own this property.");
-                            b0.setOnAction(actionEvent -> popup.close());
+                            b0.setOnMouseEntered(mouseEvent -> AudioClips.buttonAudioClips[5].play(.5));
+                            b0.setOnAction(actionEvent -> {
+                                popup.close();
+                                AudioClips.build.stop();
+                                AudioClips.buttonAudioClips[2].play(.5);
+                            });
                         }
                     }
 
@@ -753,6 +829,8 @@ class GameManager {
 
         popup.setScene(new Scene(popupBorderPane));
         popup.show();
+        if (popupIntroSound != null)
+            popupIntroSound.play();
     }
 
 
@@ -802,7 +880,9 @@ class GameManager {
             e.printStackTrace();
         }
         bankruptWindow.setScene(new Scene(vBox, 600, 450));
+        AudioClips.bankrupt.play(.5);
         bankruptWindow.showAndWait();
+        AudioClips.bankrupt.stop();
 
         gameBox.getChildren().remove(players.indexOf(loser) + 1);
         playerGridPane.getChildren().remove(loser.getPlane());
@@ -828,6 +908,7 @@ class GameManager {
         vBox.setAlignment(Pos.CENTER);
         urWinner.setScene(new Scene(vBox, 1100, 500));
         urWinner.show();
+        AudioClips.gameOver.play(.6);
 
         urWinner.setOnCloseRequest(windowEvent -> System.exit(0));
     }
