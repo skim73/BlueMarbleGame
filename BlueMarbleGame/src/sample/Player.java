@@ -134,7 +134,6 @@ class Player {
         moveAnimation.setRate(4.5);
         move(destination - space, false);
         if (fromSpaceStation) {
-            AudioClips.spaceTravel.play();
             spaceStation = false;
         }
 
@@ -189,6 +188,7 @@ class Player {
             Collections.sort(properties);
             Collections.sort(propertiesComboBox.getItems());
             property.owner = this;
+            AudioClips.purchase.play(.5);
         } catch (NotEnoughMoneyException e) {
             Alert alert = new Alert(Alert.AlertType.ERROR);
             alert.setTitle("You don't have enough money!");
@@ -196,6 +196,7 @@ class Player {
             alert.setContentText("Try again when you do have enough money.");
             AudioClips.buttonAudioClips[6].play(.5);
             alert.showAndWait();
+            AudioClips.buttonAudioClips[2].play(.5);
         }
     }
 
@@ -215,6 +216,7 @@ class Player {
                 property.getPrices()[3] * buildMatrix[2];
             changeMoney(property.price - finalPrice);
             property.construct(buildMatrix);
+            AudioClips.purchase.play(.5);
             propertiesComboBox.getItems().set(propertiesComboBox.getItems().indexOf(property), property);
         } catch (NotEnoughMoneyException e) {
             Alert alert = new Alert(Alert.AlertType.ERROR);
@@ -223,6 +225,7 @@ class Player {
             alert.setContentText("Try again when you do have enough money.");
             AudioClips.buttonAudioClips[6].play(.5);
             alert.showAndWait();
+            AudioClips.buttonAudioClips[2].play(.5);
             return false;
         }
         return true;
@@ -237,42 +240,37 @@ class Player {
     public void payOther(Player other, double amount) throws BankruptcyException {
         try {
             changeMoney(-amount);
+            AudioClips.buttonAudioClips[0].play(.5);
             if (other != null) {
                 other.changeMoney(amount);
             }
         } catch (NotEnoughMoneyException e) {
             AudioClips.buttonAudioClips[6].play(.5);
-            if (openDebtWindow(other, amount - money) > 0) {
+            if (openDebtWindow(other, money - amount) < 0) {
                 throw new BankruptcyException(other);
             } else {
-                changeMoney(-amount);
+                payOther(other, amount);
             }
         }
     }
 
     /**
-     * Sells property to the specified player
+     * Sells property to banker
      *
      * @param sold     Property being sold
-     * @param receiver to whom the Property is being sold (if null, Banker)
      */
-    public void sell(Property sold, Player receiver) {
+    public void sell(Property sold) {
         if (sold == null)
             return;
-        sold.owner = receiver;
+        sold.owner = null;
+        changeMoney(sold.price);
         properties.remove(sold);
         propertiesComboBox.getItems().remove(sold);
-        if (receiver != null) {
-            receiver.properties.add(sold);
-            sold.ownerRectangle.setFill(receiver.getPlayerColor());
-            receiver.propertiesComboBox.getItems().add(sold);
-            Collections.sort(receiver.properties);
-            Collections.sort(receiver.propertiesComboBox.getItems());
-        } else {
-            if (sold instanceof RegularProperty)
-                ((RegularProperty) sold).deconstruct();
-            sold.ownerRectangle.setFill(Color.TRANSPARENT);
-        }
+
+        if (sold instanceof RegularProperty)
+            ((RegularProperty) sold).deconstruct();
+        sold.ownerRectangle.setFill(Color.TRANSPARENT);
+
         Collections.sort(properties);
         Collections.sort(propertiesComboBox.getItems());
     }
@@ -282,16 +280,16 @@ class Player {
      * Sets up and shows the window where the Player can handle their debt to another
      *
      * @param other the Player to whom the debtor (this Player) owes money
-     * @param debt  the amount of debt this Player owes to other
-     * @return false if Player has successfully paid off all their debt; true if Player declared bankruptcy
+     * @param debt  the amount of debt this Player owes (expressed as -$#.##M)
+     * @return the amount the Player has
      */
     public double openDebtWindow(Player other, double debt) {
         Alert alert = new Alert(Alert.AlertType.WARNING);
         alert.setTitle("You are on debt!");
         alert.setHeaderText(name + ", you can't pay your bills to " +
             (other == null ? "BANKER" : other.getName()) + "!");
-        alert.setContentText("You are " + MoneyFormat.format(debt) + " short!" +
-            "\nYou must sell some of your properties to " + (other == null ? "BANKER" : other.getName()) + "!");
+        alert.setContentText("You are " + MoneyFormat.format(-debt) + " short!" +
+            "\nYou must sell some of your properties to the bank!");
         alert.showAndWait();
 
         final double[] debtArray = {debt};
@@ -303,7 +301,7 @@ class Player {
             "DECLARING BANKRUPTCY.");
         warningLabel.setFont(new Font("Arial Black", 14));
         warningLabel.setTextFill(Color.DEEPPINK);
-        Label debtText = new Label("CURRENT DEBT: " + MoneyFormat.format(debt));
+        Label debtText = new Label("YOU WILL HAVE: " + MoneyFormat.format(debtArray[0]) + " LEFT");
         debtText.setTextFill(Color.CRIMSON);
         debtText.setFont(new Font("Arial Black", 20));
         VBox topLabels = new VBox(promptLabel, warningLabel, debtText);
@@ -311,8 +309,7 @@ class Player {
         topLabels.setSpacing(32);
         pane.setTop(topLabels);
 
-        Label yourPropertiesLabel = new Label("Select properties to sell to " +
-            (other == null ? "BANKER" : other.getName()));
+        Label yourPropertiesLabel = new Label("Select a property to sell to the bank.");
         ListView<Property> properties = new ListView<>();
         properties.getItems().addAll(this.properties);
 
@@ -326,7 +323,7 @@ class Player {
                 !Arrays.equals(((RegularProperty) sold).getBuildings(), new int[]{0, 0, 0})) {
 
                 Stage sellBuildingStage = new Stage();
-                Label prompt = new Label("Do you want to sell buildings to the BANKER first?");
+                Label prompt = new Label("Do you want to sell buildings first?");
                 int[] queries = new int[3];
                 Label[] queriesLabels = {new Label("0"), new Label("0"), new Label("0")};
                 for (int i = 0; i < 3; i++) {
@@ -419,48 +416,25 @@ class Player {
                 if (((RegularProperty) sold).getBuildings()[2] == 0) {
                     plusButtonHotel.setVisible(false);
                 }
-
+                
                 b0.setOnAction(actionEvent1 -> {
                     double originalMoney = money;
                     int[] minus = ((RegularProperty) sold).getBuildings();
                     for (int i = 0; i < 3; i++)
                         minus[i] -= queries[i];
                     build((RegularProperty) sold, minus);
-                    debtArray[0] -= (money - originalMoney);
-                    if (debtArray[0] <= 0) {
-                        debtText.setText("Your debts have been covered.\nYou may safely close this window.");
-                        debtText.setTextFill(Color.FORESTGREEN);
-                    } else {
-                        debtText.setText("CURRENT DEBT: " + MoneyFormat.format(debtArray[0]));
+                    debtArray[0] += (money - originalMoney);
+                    debtText.setText("YOU WILL HAVE: " + MoneyFormat.format(debtArray[0]) + " LEFT");
+                    if (debtArray[0] >= 0) {
+                        debtText.setTextFill(Color.MEDIUMTURQUOISE);
+                        warningLabel.setText("Your debts have been covered.\nYou may safely close this window.");
+                        warningLabel.setTextFill(Color.FORESTGREEN);
                     }
                     properties.getItems().set(properties.getItems().indexOf(sold), sold);
                     sellBuildingStage.close();
                 });
 
-                Button justSellAll = new Button("Sell property with all these buildings");
-                justSellAll.setOnAction(actionEvent1 -> {
-                    Alert alert1 = new Alert(Alert.AlertType.CONFIRMATION);
-                    alert1.setTitle("Will you sell this property with all these buildings?");
-                    alert1.setHeaderText("Are you sure you want to sell this property with all these buildings?");
-                    alert1.setContentText("Once you select OK, this property will be \npermanently sold for " +
-                        MoneyFormat.format(sold.price) + ".");
-                    Optional<ButtonType> option = alert1.showAndWait();
-                    if (option.isPresent() && option.get() == alert1.getButtonTypes().get(0)) {
-                        sell(sold, other);
-                        debtArray[0] -= sold.price;
-                        properties.getItems().remove(sold);
-
-                        if (debtArray[0] <= 0) {
-                            debtText.setText("Your debts have been covered.\nYou may safely close this window.");
-                            debtText.setTextFill(Color.FORESTGREEN);
-                        } else {
-                            debtText.setText("CURRENT DEBT: " + MoneyFormat.format(debtArray[0]));
-                        }
-                        sellBuildingStage.close();
-                    }
-                });
-
-                VBox vBox = new VBox(prompt, houseQuery, officeBuildingQuery, hotelQuery, b0, justSellAll);
+                VBox vBox = new VBox(prompt, houseQuery, officeBuildingQuery, hotelQuery, b0);
                 vBox.setSpacing(16);
                 vBox.setAlignment(Pos.CENTER);
 
@@ -475,15 +449,15 @@ class Player {
                     MoneyFormat.format(sold.price) + ".");
                 Optional<ButtonType> option = alert1.showAndWait();
                 if (option.isPresent() && option.get() == alert1.getButtonTypes().get(0)) {
-                    sell(sold, other);
-                    debtArray[0] -= sold.price;
+                    sell(sold);
+                    debtArray[0] += sold.price;
                     properties.getItems().remove(sold);
 
-                    if (debtArray[0] <= 0) {
-                        debtText.setText("Your debts have been covered.\nYou may safely close this window.");
-                        debtText.setTextFill(Color.FORESTGREEN);
-                    } else {
-                        debtText.setText("CURRENT DEBT: " + MoneyFormat.format(debtArray[0]));
+                    debtText.setText("YOU WILL HAVE: " + MoneyFormat.format(debtArray[0]) + " LEFT");
+                    if (debtArray[0] >= 0) {
+                        debtText.setTextFill(Color.MEDIUMTURQUOISE);
+                        warningLabel.setText("Your debts have been covered.\nYou may safely close this window.");
+                        warningLabel.setTextFill(Color.FORESTGREEN);
                     }
                 }
             }
@@ -496,14 +470,13 @@ class Player {
         pane.setCenter(centerBox);
 
         debtWindow.setOnCloseRequest(windowEvent -> {
-            if (debtArray[0] > 0) {
+            if (debtArray[0] < 0) {
                 if (!declareBankruptcy()) {
                     windowEvent.consume();
                 } else {
                     debtWindow.close();
                 }
             } else {
-                changeMoney(-debtArray[0]);
                 debtWindow.close();
             }
         });
@@ -541,7 +514,7 @@ class Player {
      * @return TRUE if declared bankruptcy; FALSE if cancelled.
      */
     public boolean declareBankruptcy() {
-        AudioClips.buttonAudioClips[6].play(.5);
+        AudioClips.buttonAudioClips[6].play();
         Alert alert = new Alert(Alert.AlertType.WARNING,
             "You will be eliminated from the game, and all your properties will belong to whom you owe.",
             new ButtonType("yes. T-T", ButtonBar.ButtonData.YES),

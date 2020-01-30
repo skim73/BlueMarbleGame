@@ -40,7 +40,7 @@ abstract class Property implements Comparable<Property> {
         this.rent = rent;
         owner = null;
         this.space = space;
-        ownerRectangle = new Rectangle(16, 16);
+        ownerRectangle = new Rectangle(12, 12);
         ownerRectangle.setFill(Color.TRANSPARENT);
         if (space < 10) {
             GridPane.setConstraints(ownerRectangle,

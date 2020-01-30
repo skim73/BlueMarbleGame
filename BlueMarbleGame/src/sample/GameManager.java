@@ -109,6 +109,7 @@ class GameManager {
                 alert.setContentText("You are stuck here for the next " +
                     players.get(turn).getTurnsLeftOnDesertedIsland() + " turn(s).");
                 alert.show();
+                AudioClips.desertedIsland.play();
                 alert.setOnHidden(dialogEvent -> playerTurnLabel.setText(nextTurn().getName() + "'s turn."));
             }
 
@@ -121,7 +122,7 @@ class GameManager {
         playerGridPane.getChildren().add(welfareText);
 
         goldenKeys = new LinkedList<>();
-        for (int i = 0; i < 29; i++) {
+        for (int i = 0; i < 30; i++) {
             goldenKeys.add(new GoldenKey(new Image(new FileInputStream(
                 "img_goldenkeys/goldenkey" + i + ".jpg")), i));
         }
@@ -245,6 +246,7 @@ class GameManager {
             }
             String dest = comboBox.getValue();
             int destination = Integer.parseInt(dest.substring(0, dest.indexOf(":")));
+            AudioClips.spaceTravel.play();
             players.get(turn).directlyMove(destination, true);
             popup.close();
         });
@@ -360,6 +362,7 @@ class GameManager {
                     });
                     break;
                 case 10:
+                    popupIntroSound = AudioClips.desertedIsland;
                     imageView.setImage(new Image(new FileInputStream("img_properties/10.png")));
                     topLabel.setText("You are stuck in the Deserted Island for 3 turns.");
                     b0.setText("SOS!");
@@ -385,12 +388,14 @@ class GameManager {
                     break;
                 case 30:
                     if (freeSpaceStation) {
+                        AudioClips.enterSpaceTravel.play();
                         players.get(turn).enterSpaceStation();
                         GridPane.setConstraints(players.get(turn).getPlane(), 10, 4);
                         freeSpaceStation = false;
                         playerTurnLabel.setText(nextTurn().getName() + "'s turn.");
                         return;
                     }
+                    popupIntroSound = AudioClips.enterSpaceTravel;
                     imageView.setImage(new Image(new FileInputStream("img_properties/30.png")));
                     topLabel.setText("Would you like to enter Space Station?");
                     if (players.get(turn) == spaceToProperty.get(32).owner)
@@ -452,6 +457,7 @@ class GameManager {
                     imageView.setImage(goldenKey.card);
                     topLabel.setText("GOLDEN KEY CARD");
                     Property mostExpensive = null;
+                    double[] fee = {0};
                     if (goldenKey.id == 22 || goldenKey.id == 23) {
                         if (players.get(turn).getProperties().size() > 0) {
                             mostExpensive = players.get(turn).getProperties().get(0);
@@ -462,6 +468,36 @@ class GameManager {
                         }
                         rightVBox.getChildren().add(0, new Label("Your most expensive property: \n" +
                             (mostExpensive != null ? mostExpensive.toString() : "NULL") + "\n"));
+                    } else if (goldenKey.id == 17) {
+                        for (Property property : players.get(turn).getProperties()) {
+                            if (property instanceof RegularProperty) {
+                                fee[0] += .10 * ((RegularProperty) property).getBuildings()[0] +
+                                        .30 * ((RegularProperty) property).getBuildings()[1] +
+                                        .50 * ((RegularProperty) property).getBuildings()[2];
+                            }
+                        }
+                        rightVBox.getChildren().add(0,
+                                new Label("Total cost: " + MoneyFormat.format(fee[0])));
+                    } else if (goldenKey.id == 20) {
+                        for (Property property : players.get(turn).getProperties()) {
+                            if (property instanceof RegularProperty) {
+                                fee[0] += .30 * ((RegularProperty) property).getBuildings()[0] +
+                                        .60 * ((RegularProperty) property).getBuildings()[1] +
+                                        1.00 * ((RegularProperty) property).getBuildings()[2];
+                            }
+                        }
+                        rightVBox.getChildren().add(0,
+                                new Label("Total cost: " + MoneyFormat.format(fee[0])));
+                    } else if (goldenKey.id == 25) {
+                        for (Property property : players.get(turn).getProperties()) {
+                            if (property instanceof RegularProperty) {
+                                fee[0] += 1.50 * ((RegularProperty) property).getBuildings()[2] +
+                                        1.00 * ((RegularProperty) property).getBuildings()[1] +
+                                        .50 * ((RegularProperty) property).getBuildings()[0];
+                            }
+                        }
+                        rightVBox.getChildren().add(0,
+                                new Label("Total cost: " + MoneyFormat.format(fee[0])));
                     }
                     Property finalMostExpensive = mostExpensive;
                     b0.setOnAction(actionEvent -> {
@@ -544,16 +580,10 @@ class GameManager {
                                 players.get(turn).directlyMove(1, false);
                                 break;
                             case 17:
-                                double total = 0;
-                                for (Property property : players.get(turn).getProperties()) {
-                                    if (property instanceof RegularProperty) {
-                                        total += .10 * ((RegularProperty) property).getBuildings()[0] +
-                                            .30 * ((RegularProperty) property).getBuildings()[1] +
-                                            .50 * ((RegularProperty) property).getBuildings()[2];
-                                    }
-                                }
+                            case 20:
+                            case 25:
                                 try {
-                                    players.get(turn).payOther(null, total);
+                                    players.get(turn).payOther(null, fee[0]);
                                 } catch (BankruptcyException e) {
                                     e.printStackTrace();
                                 }
@@ -566,21 +596,6 @@ class GameManager {
                                 welfare = 0;
                                 welfareText.setText(MoneyFormat.format(0));
                                 break;
-                            case 20:
-                                double total1 = 0;
-                                for (Property property : players.get(turn).getProperties()) {
-                                    if (property instanceof RegularProperty) {
-                                        total1 += .30 * ((RegularProperty) property).getBuildings()[0] +
-                                            .60 * ((RegularProperty) property).getBuildings()[1] +
-                                            1.00 * ((RegularProperty) property).getBuildings()[2];
-                                    }
-                                }
-                                try {
-                                    players.get(turn).payOther(null, total1);
-                                } catch (BankruptcyException e) {
-                                    e.printStackTrace();
-                                }
-                                break;
                             case 21:
                                 players.get(turn).changeMoney(3.00);
                                 break;
@@ -588,26 +603,12 @@ class GameManager {
                             case 23:
                                 if (finalMostExpensive == null)
                                     break;
-                                players.get(turn).changeMoney(finalMostExpensive.price / 2);
-                                players.get(turn).sell(finalMostExpensive, null);
+                                double halfPrice = finalMostExpensive.price / 2;
+                                players.get(turn).sell(finalMostExpensive);
+                                players.get(turn).changeMoney(-halfPrice);
                                 break;
                             case 24:
                                 players.get(turn).directlyMove(39, false);
-                                break;
-                            case 25:
-                                double total2 = 0;
-                                for (Property property : players.get(turn).getProperties()) {
-                                    if (property instanceof RegularProperty) {
-                                        total2 += 1.50 * ((RegularProperty) property).getBuildings()[2] +
-                                            1.00 * ((RegularProperty) property).getBuildings()[1] +
-                                            .50 * ((RegularProperty) property).getBuildings()[0];
-                                    }
-                                }
-                                try {
-                                    players.get(turn).payOther(null, total2);
-                                } catch (BankruptcyException e) {
-                                    e.printStackTrace();
-                                }
                                 break;
                             case 26:
                                 players.get(turn).directlyMove(20, false);
@@ -618,6 +619,16 @@ class GameManager {
                                 players.get(turn).directlyMove(30, false);
                                 players.get(turn).enterSpaceStation();
                                 GridPane.setConstraints(players.get(turn).getPlane(), 10, 4);
+                                break;
+                            case 29:
+                                if (spaceToProperty.get(28).owner != null) {
+                                    try {
+                                        players.get(turn).payOther(spaceToProperty.get(28).owner, 2.50);
+                                    } catch (BankruptcyException e) {
+                                        eliminate(players.get(turn), e.shark);
+                                    }
+                                }
+                                players.get(turn).directlyMove(3, false);
                                 break;
                         }
                         popup.close();
@@ -638,7 +649,7 @@ class GameManager {
 
                         b0.setText("YES (for " + MoneyFormat.format(property.price) + ")");
                         b0.setOnAction(actionEvent -> {
-                            AudioClips.purchase.play(.5);
+                            AudioClips.build.stop();
                             players.get(turn).purchase(property);
                             popup.close();
                         });
@@ -663,7 +674,6 @@ class GameManager {
                             });
                             try {
                                 players.get(turn).payOther(property.owner, property.rent);
-                                AudioClips.buttonAudioClips[0].play(.5);
                             } catch (BankruptcyException e) {
                                 eliminate(players.get(turn), e.shark);
                             }
@@ -779,9 +789,9 @@ class GameManager {
 
                             b0.setText("Construct/Sell Buildings");
                             b0.setOnAction(actionEvent -> {
+                                AudioClips.build.stop();
                                 if (players.get(turn).build((RegularProperty) property, queries))
                                     popup.close();
-                                AudioClips.purchase.play();
                             });
 
                             if (((RegularProperty) property).getBuildings()[0] == 0)
