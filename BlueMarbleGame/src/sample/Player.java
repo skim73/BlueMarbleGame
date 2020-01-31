@@ -340,42 +340,36 @@ class Player {
                 Button plusButtonHotel = new Button("+");
 
                 minusButtonHouse.setOnAction(actionEvent1 -> {
-                    AudioClips.buttonAudioClips[1].play(.5);
                     if (--queries[0] == 0)
                         minusButtonHouse.setVisible(false);
                     plusButtonHouse.setVisible(true);
                     queriesLabels[0].setText(queries[0] + "");
                 });
                 plusButtonHouse.setOnAction(actionEvent1 -> {
-                    AudioClips.buttonAudioClips[1].play(.5);
                     if (++queries[0] == ((RegularProperty) sold).getBuildings()[0])
                         plusButtonHouse.setVisible(false);
                     minusButtonHouse.setVisible(true);
                     queriesLabels[0].setText(queries[0] + "");
                 });
                 minusButtonOfficeBuilding.setOnAction(actionEvent1 -> {
-                    AudioClips.buttonAudioClips[1].play(.5);
                     if (--queries[1] == 0)
                         minusButtonOfficeBuilding.setVisible(false);
                     plusButtonOfficeBuilding.setVisible(true);
                     queriesLabels[1].setText(queries[1] + "");
                 });
                 plusButtonOfficeBuilding.setOnAction(actionEvent1 -> {
-                    AudioClips.buttonAudioClips[1].play(.5);
                     if (++queries[1] == ((RegularProperty) sold).getBuildings()[1])
                         plusButtonOfficeBuilding.setVisible(false);
                     minusButtonOfficeBuilding.setVisible(true);
                     queriesLabels[1].setText(queries[1] + "");
                 });
                 minusButtonHotel.setOnAction(actionEvent1 -> {
-                    AudioClips.buttonAudioClips[1].play(.5);
                     if (--queries[2] == 0)
                         minusButtonHotel.setVisible(false);
                     plusButtonHotel.setVisible(true);
                     queriesLabels[2].setText(queries[2] + "");
                 });
                 plusButtonHotel.setOnAction(actionEvent1 -> {
-                    AudioClips.buttonAudioClips[1].play(.5);
                     if (++queries[2] == ((RegularProperty) sold).getBuildings()[2])
                         plusButtonHotel.setVisible(false);
                     minusButtonHotel.setVisible(true);
