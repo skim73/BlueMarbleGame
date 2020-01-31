@@ -2,7 +2,7 @@
 JavaFX (13.0.1) application of a Korean spin-off of Monopoly board game
 
 For now, this is only runnable via a professional Java IDE (I recommend IntelliJ since it's the IDE I used). Please run this on
-JDK 11+ & JavaFX SDK 11+.
+JDK 13+ & JavaFX SDK 13+.
 
 # ABOUT BLUE MARBLE 부루마불
 "Blue Marble" (부루마불) is essentially the 1982 Korean spin-off of Monopoly, in which players travel around the board, buying properties around the world
