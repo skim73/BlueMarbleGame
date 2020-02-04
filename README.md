@@ -1,9 +1,9 @@
 # Running the Game
 - February 4, 2020: Finally, the independent Windows batch file for Blue Marble javafx game is available!
-- (1) Switch to the "batch" branch
-- (2) Download the folder "BlueMarbleGame" (in "batch" branch) as ZIP
-- (3) Extract it
-- (4) Double-click/run the "BlueMarbleGame" shortcut.
+- (1) Click on "Branch: master" on top left; switch to "batch" branch
+- (2) Click on the green "Clone or download" button on top right; click "Download ZIP"
+- (3) Extract it; I suggest having all these files in a folder named "BlueMarbleGame" or something
+- (4) Double-click/run the "BlueMarbleGame" shortcut. This shortcut can be moved to any directory in the computer
 
 # ABOUT BLUE MARBLE 부루마불
 "Blue Marble" (부루마불) is essentially the 1982 Korean spin-off of Monopoly, in which players travel around the board, buying properties around the world
