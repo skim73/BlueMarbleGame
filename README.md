@@ -10,6 +10,7 @@
     and constructing buildings to raise their rents for the ultimate goal of being the richest player in the game.
     
 There are some rules and features that make Blue Marble and Monopoly distinct.
+
 (1) DESERTED ISLAND (on the 10th space from GO)
     - This corresponds to JAIL in Monopoly. However, players who land on this space are immediately trapped there for 3 turns and
     lose their corresponding turn, regardless of whether they had a double or not.
