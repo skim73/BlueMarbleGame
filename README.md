@@ -1,6 +1,6 @@
 # Running the Game
 - February 4, 2020: Finally, the independent Windows batch file for Blue Marble javafx game is available!
-- (1) Go to the "batch" branch
+- (1) Switch to the "batch" branch
 - (2) Download the folder "BlueMarbleGame" (in "batch" branch) as ZIP
 - (3) Extract it
 - (4) Double-click/run the "BlueMarbleGame" shortcut.
