@@ -1,10 +1,9 @@
-# BlueMarbleGame
-JavaFX application of a Korean spin-off of Monopoly board game
-
-For now, this is only runnable via a professional Java IDE (I recommend IntelliJ since it's the IDE I used). This is runnable with just Java 1.8, which should have all JavaFX libraries included.
-If you plan to run this with JavaFX SDK 11+, make sure VM options have
---module path "(DIRECTORY_TO_BlueMarbleGame_FOLDER)" --add-modules javafx.controls,javafx.media 
-    (absolutely no space after that comma)
+# Running the Game
+- February 4, 2020: Finally, the independent Windows batch file for Blue Marble javafx game is available!
+(1) Go to the "batch" branch
+(2) Download the folder "BlueMarbleGame" (in "batch" branch) as ZIP
+(3) Extract it
+(4) Double-click/run "launch.bat - Shortcut" file.
 
 # ABOUT BLUE MARBLE 부루마불
 "Blue Marble" (부루마불) is essentially the 1982 Korean spin-off of Monopoly, in which players travel around the board, buying properties around the world
