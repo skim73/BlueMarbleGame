@@ -31,7 +31,7 @@ There are some rules and features that make Blue Marble and Monopoly distinct.
 - Players who land on WELFARE PAY Space must pay $1.50M to the WELFARE ZONE, and whoever lands on the WELFARE ZONE takes all money accumulated in this space.
     
 (3) SPACE STATION (30th space)
-- When players land here, they can pay $2.00M to the owner of Columbia Space Shuttle (special property located on the 32nd space) if they want to choose to which space they want to go to in their next turn.
+- When players land here, they can pay $2.00M to the owner of Space Shuttle Columbia (special property located on the 32nd space) to be able to travel to any space they want in the next turn.
 - They can select literally any space on the board (except back to Space Station), even the Deserted Island - a popular pick when many properties have expensive rents due to numerous office buildings and hotels.
     
 (4) CONSTRUCTING BUILDINGS
