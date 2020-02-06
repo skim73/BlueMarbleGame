@@ -7,7 +7,7 @@ WINDOWS (.bat file):
 - (2) Click on the green "Clone or download" button on top right; click "Download ZIP"
 - (3) Extract it; I suggest having all these files in a folder named "BlueMarbleGame" or something
 - (4) Go into "bin" folder & double-click "launch.bat" file
-- (5) For convenience, create a shortcut to this "launch.bat" file and locate it somewhere much more accessible; I provided the icon for this shortcut outside the "bin" folder.
+- (5) For convenience, create a shortcut to this "launch.bat" file and locate it somewhere much more accessible; I provided the icon for this shortcut outside the "bin" folder ("bluemarblegame.ico").
 
 # ABOUT BLUE MARBLE 부루마불
 "Blue Marble" (부루마불) is essentially the 1982 Korean spin-off of Monopoly, in which players travel around the board, buying properties around the world
