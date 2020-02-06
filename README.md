@@ -1,5 +1,4 @@
 # BlueMarbleGame
-JavaFX application of a Korean spin-off of Monopoly board game
 WINDOWS (.bat file):
 - (1) Click on "Branch: master" on top left; switch to "batch" branch
 - (2) Click on the green "Clone or download" button on top right; click "Download ZIP"
