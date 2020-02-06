@@ -1,5 +1,5 @@
-# BlueMarbleGame
-WINDOWS (.bat file):
+# Running Blue Marble on WINDOWS (.bat file)
+*This is for running on WINDOWS.
 - (1) Click on "Branch: master" on top left; switch to "batch" branch
 - (2) Click on the green "Clone or download" button on top right; click "Download ZIP"
 - (3) Extract it; I suggest having all these files in a folder named "BlueMarbleGame" or something
