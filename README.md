@@ -1,4 +1,4 @@
-*You are on the "master" branch, which contains all resources and source codes written in JavaFX to create this game. To run this game, you must download files in another branch, depending on your computer's OS.
+*You are on the "master" branch, which contains all resources and source codes written in JavaFX to create this game. To run this game, you must download files located in another branch, depending on your computer's OS.
 
 # Running the Game
 
