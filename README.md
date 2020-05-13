@@ -1,4 +1,4 @@
-*You are on the "master" branch, which contains all resources and source codes written in JavaFX to create this game. To run this game, you must download files located in another branch, depending on your computer's OS.
+*You are on the "master" branch, which contains all resources and source codes written in JavaFX to create this game. This game is only runnable on Windows. Sorry.
 
 # Running the Game
 
@@ -8,6 +8,3 @@ WINDOWS (.bat file):
 - (3) Extract it; I suggest having all these files in a folder named "BlueMarbleGame" or something
 - (4) Go into "bin" folder & double-click "launch.bat" file
 - (5) For convenience, create a shortcut to this "launch.bat" file and locate it somewhere much more accessible; I provided the icon for this shortcut outside the "bin" folder ("bluemarblegame.ico").
-
-MAC/LINUX (.sh file):
-- (coming soon)
