@@ -8,3 +8,6 @@ WINDOWS (.bat file):
 - (3) Extract it; I suggest having all these files in a folder named "BlueMarbleGame" or something
 - (4) Go into "bin" folder & double-click "launch.bat" file
 - (5) For convenience, create a shortcut to this "launch.bat" file and locate it somewhere much more accessible; I provided the icon for this shortcut outside the "bin" folder ("bluemarblegame.ico").
+
+IF YOU WANT TO LOOK AT SOURCE CODE:
+- Please do not mimic this coding style. I made this before beginning my school's Object-Oriented Software Development class (CS 2340 : Objects and Design), so my code is against every GRASP and SOLID principle :P.
